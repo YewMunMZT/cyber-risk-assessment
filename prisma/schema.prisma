@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AssessmentQuestion {
+  id           Int      @id @default(autoincrement())
+  questionText String
+  category     String
+  choice1Text  String
+  choice1Score Float
+  choice2Text  String
+  choice2Score Float
+  choice3Text  String
+  choice3Score Float
+  choice4Text  String
+  choice4Score Float
+  isActive     Boolean  @default(true)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  answers AssessmentAnswer[]
+}
+
+model RecommendationRange {
+  id                  Int      @id @default(autoincrement())
+  minScore            Float
+  maxScore            Float
+  riskLevelName       String
+  recommendationTitle String
+  recommendationText  String
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model AssessmentSubmission {
+  id                      Int      @id @default(autoincrement())
+  companyName             String
+  contactPersonName       String
+  contactNumber           String
+  countryCode             String   @default("+65")
+  contactEmail            String
+  website                 String?
+  estimatedEndpoints      Int
+  peopleRawScore          Float    @default(0)
+  processRawScore         Float    @default(0)
+  technologyRawScore      Float    @default(0)
+  peopleWeightedScore     Float    @default(0)
+  processWeightedScore    Float    @default(0)
+  technologyWeightedScore Float    @default(0)
+  overallRiskScore        Float    @default(0)
+  overallRiskLevel        String   @default("")
+  recommendationTitle     String   @default("")
+  recommendationText      String   @default("")
+  submittedAt             DateTime @default(now())
+  reportReferenceNo       String   @unique
+
+  answers AssessmentAnswer[]
+}
+
+model AssessmentAnswer {
+  id                  Int      @id @default(autoincrement())
+  submissionId        Int
+  questionId          Int
+  questionTextSnapshot String
+  categorySnapshot    String
+  selectedChoiceText  String
+  selectedChoiceScore Float
+  createdAt           DateTime @default(now())
+
+  submission AssessmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question   AssessmentQuestion   @relation(fields: [questionId], references: [id])
+}
