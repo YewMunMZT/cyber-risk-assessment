@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply antialiased text-gray-900;
+    font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  }
+}
+
+@layer components {
+  /* Primary UOB Red button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-uob-red text-white font-semibold rounded
+           hover:bg-uob-red-dark focus:outline-none focus:ring-2 focus:ring-uob-red focus:ring-offset-2
+           transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Secondary outlined button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-4 py-2 bg-white text-gray-700 font-medium rounded
+           border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-uob-red
+           focus:ring-offset-2 transition-colors;
+  }
+
+  /* Danger button */
+  .btn-danger {
+    @apply inline-flex items-center justify-center px-4 py-2 bg-uob-red-deep text-white font-medium rounded
+           hover:bg-uob-red-dark focus:outline-none focus:ring-2 focus:ring-uob-red focus:ring-offset-2
+           transition-colors;
+  }
+
+  /* Input field */
+  .input-field {
+    @apply w-full px-4 py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2
+           focus:ring-uob-red focus:border-transparent transition-colors text-gray-900 placeholder-gray-400
+           bg-white;
+  }
+
+  /* Card */
+  .card {
+    @apply bg-white rounded shadow-sm border border-gray-200 p-6;
+  }
+}
