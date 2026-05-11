@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getAdminFromRequest } from '@/lib/auth'
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const session = await getAdminFromRequest(request)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const id = parseInt(params.id)
+    const { id } = await params
     const body = await request.json()
     const min = parseFloat(body.minScore)
     const max = parseFloat(body.maxScore)
@@ -21,7 +24,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       const overlapping = await prisma.recommendationRange.findFirst({
         where: {
           isActive: true,
-          id: { not: id },
+          id: { not: parseInt(id) },
           OR: [{ minScore: { lte: max }, maxScore: { gte: min } }],
         },
       })
@@ -33,7 +36,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const range = await prisma.recommendationRange.update({
-      where: { id },
+      where: { id: parseInt(id) },
       data: {
         minScore: min,
         maxScore: max,
@@ -51,12 +54,16 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const session = await getAdminFromRequest(request)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    await prisma.recommendationRange.delete({ where: { id: parseInt(params.id) } })
+    const { id } = await params
+    await prisma.recommendationRange.delete({ where: { id: parseInt(id) } })
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error(err)
@@ -64,14 +71,18 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const session = await getAdminFromRequest(request)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
+    const { id } = await params
     const body = await request.json()
     const range = await prisma.recommendationRange.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: { isActive: body.isActive },
     })
     return NextResponse.json(range)
