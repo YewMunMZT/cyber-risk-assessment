@@ -9,9 +9,14 @@
     "lint": "next lint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
+    "db:seed": "ts-node prisma/seed.ts",
     "db:studio": "prisma studio",
-    "setup": "prisma generate && prisma db push && ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "setup": "prisma generate && prisma db push && ts-node prisma/seed.ts"
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
   },
   "dependencies": {
     "@prisma/client": "^5.16.0",
