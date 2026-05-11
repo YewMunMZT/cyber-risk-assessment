@@ -2,16 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getAdminFromRequest } from '@/lib/auth'
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const session = await getAdminFromRequest(request)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const id = parseInt(params.id)
+    const { id } = await params
     const body = await request.json()
 
     const question = await prisma.assessmentQuestion.update({
-      where: { id },
+      where: { id: parseInt(id) },
       data: {
         questionText: body.questionText?.trim(),
         category: body.category,
@@ -31,13 +34,16 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const session = await getAdminFromRequest(request)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const id = parseInt(params.id)
-    await prisma.assessmentQuestion.delete({ where: { id } })
+    const { id } = await params
+    await prisma.assessmentQuestion.delete({ where: { id: parseInt(id) } })
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error(err)
@@ -45,16 +51,19 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const session = await getAdminFromRequest(request)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const id = parseInt(params.id)
+    const { id } = await params
     const body = await request.json()
 
     const question = await prisma.assessmentQuestion.update({
-      where: { id },
+      where: { id: parseInt(id) },
       data: { isActive: body.isActive },
     })
 
