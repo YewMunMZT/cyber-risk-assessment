@@ -9,19 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy: {
-          50: '#f0f4ff',
-          100: '#e0e9ff',
-          200: '#c7d7fe',
-          300: '#a5b8fd',
-          400: '#818efb',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          950: '#1e1b4b',
+        uob: {
+          red:       '#CC0000',
+          'red-dark':'#A80000',
+          'red-deep':'#800000',
+          'red-light':'#FF1A1A',
+          dark:      '#1B1B1B',
+          'dark-2':  '#2D2D2D',
+          'dark-3':  '#3D3D3D',
+          gray:      '#6B6B6B',
+          'light':   '#F5F5F5',
+          'border':  '#E0E0E0',
         },
+      },
+      fontFamily: {
+        sans: ['Arial', 'Helvetica Neue', 'Helvetica', 'sans-serif'],
       },
     },
   },

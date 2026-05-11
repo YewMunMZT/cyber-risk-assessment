@@ -85,7 +85,7 @@ export default function SubmissionDetailPage() {
     return (
       <div className="p-8 flex items-center justify-center min-h-96">
         <div className="text-center">
-          <div className="inline-block w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3" />
+          <div className="inline-block w-10 h-10 border-4 border-red-200 border-t-uob-red rounded-full animate-spin mb-3" />
           <p className="text-gray-500 text-sm">Loading report...</p>
         </div>
       </div>
@@ -96,7 +96,7 @@ export default function SubmissionDetailPage() {
     return (
       <div className="p-8 text-center">
         <p className="text-gray-500">Submission not found.</p>
-        <Link href="/admin/submissions" className="text-indigo-600 hover:underline text-sm mt-2 inline-block">← Back to submissions</Link>
+        <Link href="/admin/submissions" className="text-uob-red hover:underline text-sm mt-2 inline-block">← Back to submissions</Link>
       </div>
     )
   }
@@ -116,7 +116,7 @@ export default function SubmissionDetailPage() {
       {/* Breadcrumb + Actions */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2 text-sm">
-          <Link href="/admin/submissions" className="text-indigo-600 hover:underline">Submitted Reports</Link>
+          <Link href="/admin/submissions" className="text-uob-red hover:underline">Submitted Reports</Link>
           <span className="text-gray-400">›</span>
           <span className="text-gray-600 font-mono">{submission.reportReferenceNo}</span>
         </div>

@@ -155,7 +155,7 @@ function RangeModal({
                 <button
                   type="button"
                   onClick={() => set('isActive', !form.isActive)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.isActive ? 'bg-indigo-600' : 'bg-gray-300'}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.isActive ? 'bg-uob-red' : 'bg-gray-300'}`}
                 >
                   <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform ${form.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
@@ -274,7 +274,7 @@ export default function RecommendationsPage() {
 
       {loading ? (
         <div className="card text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3" />
+          <div className="inline-block w-8 h-8 border-4 border-red-200 border-t-uob-red rounded-full animate-spin mb-3" />
           <p className="text-gray-500 text-sm">Loading ranges...</p>
         </div>
       ) : ranges.length === 0 ? (
@@ -313,14 +313,14 @@ export default function RecommendationsPage() {
                     <button
                       onClick={() => handleToggle(r)}
                       disabled={togglingId === r.id}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${r.isActive ? 'bg-indigo-600' : 'bg-gray-300'} disabled:opacity-50`}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${r.isActive ? 'bg-uob-red' : 'bg-gray-300'} disabled:opacity-50`}
                       title={r.isActive ? 'Deactivate' : 'Activate'}
                     >
                       <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transform transition-transform ${r.isActive ? 'translate-x-4' : 'translate-x-1'}`} />
                     </button>
                     <button
                       onClick={() => { setEditRange(r); setShowModal(true) }}
-                      className="px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg"
+                      className="px-3 py-1.5 text-xs font-medium text-uob-red bg-red-50 hover:bg-red-100 rounded-lg"
                     >
                       Edit
                     </button>

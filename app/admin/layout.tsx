@@ -6,10 +6,10 @@ import { usePathname, useRouter } from 'next/navigation'
 import clsx from 'clsx'
 
 const NAV = [
-  { href: '/admin', label: 'Dashboard', icon: '📊', exact: true },
-  { href: '/admin/questions', label: 'Question Bank', icon: '📝', exact: false },
+  { href: '/admin',             label: 'Dashboard',              icon: '📊', exact: true },
+  { href: '/admin/questions',   label: 'Question Bank',          icon: '📝', exact: false },
   { href: '/admin/recommendations', label: 'Risk Recommendations', icon: '🎯', exact: false },
-  { href: '/admin/submissions', label: 'Submitted Reports', icon: '📋', exact: false },
+  { href: '/admin/submissions', label: 'Submitted Reports',      icon: '📋', exact: false },
 ]
 
 function NavItem({ href, label, icon, exact }: { href: string; label: string; icon: string; exact: boolean }) {
@@ -20,13 +20,13 @@ function NavItem({ href, label, icon, exact }: { href: string; label: string; ic
     <Link
       href={href}
       className={clsx(
-        'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
+        'flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all border-l-2',
         active
-          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/30'
-          : 'text-slate-300 hover:bg-slate-700/60 hover:text-white'
+          ? 'bg-uob-red/15 text-white border-uob-red'
+          : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 border-transparent'
       )}
     >
-      <span className="text-base">{icon}</span>
+      <span className="text-base w-5 text-center">{icon}</span>
       <span>{label}</span>
     </Link>
   )
@@ -36,6 +36,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+  const pathname = usePathname()
+
+  useEffect(() => { setSidebarOpen(false) }, [pathname])
 
   const handleLogout = async () => {
     setLoggingOut(true)
@@ -43,51 +46,53 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push('/admin/login')
   }
 
-  // Close sidebar on route change (mobile)
-  const pathname = usePathname()
-  useEffect(() => {
-    setSidebarOpen(false)
-  }, [pathname])
-
   const Sidebar = () => (
-    <div className="flex flex-col h-full bg-slate-900">
+    <div className="flex flex-col h-full bg-uob-dark">
+
+      {/* UOB Brand top accent */}
+      <div className="h-1 bg-uob-red flex-shrink-0" />
+
       {/* Brand */}
-      <div className="px-5 py-6 border-b border-slate-700/50">
+      <div className="px-5 py-5 border-b border-white/10 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-lg shadow-inner">
-            🛡️
-          </div>
+          <div className="text-uob-red font-black text-2xl tracking-tight leading-none select-none">UOB</div>
+          <div className="w-px h-6 bg-white/20" />
           <div>
-            <div className="text-white font-bold text-sm leading-tight">Cyber Risk</div>
-            <div className="text-indigo-400 text-xs">Admin Portal</div>
+            <div className="text-white text-xs font-semibold">Cyber Risk</div>
+            <div className="text-gray-500 text-xs">Admin Portal</div>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
-        {NAV.map((item) => (
-          <NavItem key={item.href} {...item} />
-        ))}
+      <nav className="flex-1 py-4 overflow-y-auto">
+        <div className="px-3 mb-2">
+          <span className="text-gray-600 text-xs font-semibold uppercase tracking-wider">Menu</span>
+        </div>
+        <div className="space-y-0.5">
+          {NAV.map((item) => (
+            <NavItem key={item.href} {...item} />
+          ))}
+        </div>
       </nav>
 
-      {/* Bottom: Public link + Logout */}
-      <div className="px-3 py-4 border-t border-slate-700/50 space-y-1">
+      {/* Bottom links */}
+      <div className="border-t border-white/10 py-3 flex-shrink-0">
         <Link
           href="/"
           target="_blank"
-          className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-700/60 transition-all"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all border-l-2 border-transparent"
         >
-          <span>🌐</span>
+          <span className="w-5 text-center">🌐</span>
           <span>Public Assessment</span>
-          <span className="ml-auto text-xs opacity-60">↗</span>
+          <span className="ml-auto text-xs opacity-50">↗</span>
         </Link>
         <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-slate-400 hover:text-red-400 hover:bg-red-900/20 transition-all text-left"
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-500 hover:text-uob-red hover:bg-red-900/10 transition-all border-l-2 border-transparent text-left"
         >
-          <span>🚪</span>
+          <span className="w-5 text-center">🚪</span>
           <span>{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
         </button>
       </div>
@@ -95,46 +100,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   )
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-uob-light overflow-hidden">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-60 flex-col flex-shrink-0 shadow-xl">
+      <aside className="hidden lg:flex w-56 flex-col flex-shrink-0 shadow-xl">
         <Sidebar />
       </aside>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div
-            className="fixed inset-0 bg-black/60"
-            onClick={() => setSidebarOpen(false)}
-          />
-          <aside className="relative w-64 flex flex-col shadow-2xl">
+          <div className="fixed inset-0 bg-black/70" onClick={() => setSidebarOpen(false)} />
+          <aside className="relative w-60 flex flex-col shadow-2xl">
             <Sidebar />
           </aside>
         </div>
       )}
 
-      {/* Main content */}
+      {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile top bar */}
-        <header className="lg:hidden flex items-center gap-3 bg-slate-900 px-4 py-3 shadow-md">
+        <header className="lg:hidden flex items-center gap-3 bg-uob-dark px-4 py-3 shadow-md border-b border-uob-red">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="text-white p-1.5 rounded-lg hover:bg-slate-700 transition-colors"
-            aria-label="Open menu"
+            className="text-white p-1.5 rounded hover:bg-white/10 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🛡️</span>
-            <span className="text-white font-bold text-sm">Cyber Risk Admin</span>
-          </div>
+          <div className="text-uob-red font-black text-xl tracking-tight">UOB</div>
+          <span className="text-gray-400 text-sm">Admin Portal</span>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-uob-light">
           {children}
         </main>
       </div>

@@ -28,9 +28,9 @@ const EMPTY_FORM = {
 }
 
 const RISK_BADGE: Record<string, string> = {
-  People: 'bg-violet-100 text-violet-800',
-  Process: 'bg-blue-100 text-blue-800',
-  Technology: 'bg-teal-100 text-teal-800',
+  People:     'bg-red-100 text-red-900',
+  Process:    'bg-gray-200 text-gray-800',
+  Technology: 'bg-slate-200 text-slate-800',
 }
 
 type FormState = typeof EMPTY_FORM
@@ -141,7 +141,7 @@ function QuestionModal({
                 <button
                   type="button"
                   onClick={() => set('isActive', !form.isActive)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.isActive ? 'bg-indigo-600' : 'bg-gray-300'}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.isActive ? 'bg-uob-red' : 'bg-gray-300'}`}
                 >
                   <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform ${form.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
@@ -158,7 +158,7 @@ function QuestionModal({
             <div className="space-y-3">
               {([1, 2, 3, 4] as const).map((i) => (
                 <div key={i} className="flex gap-3 items-start">
-                  <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-2.5">
+                  <div className="w-7 h-7 rounded-full bg-red-100 text-uob-red flex items-center justify-center text-xs font-bold flex-shrink-0 mt-2.5">
                     {i}
                   </div>
                   <input
@@ -276,8 +276,8 @@ export default function QuestionsPage() {
               onClick={() => setCategoryFilter(cat)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 categoryFilter === cat
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300'
+                  ? 'bg-uob-red text-white'
+                  : 'bg-white border border-gray-200 text-gray-600 hover:border-red-300'
               }`}
             >
               {cat === 'all' ? 'All' : cat}
@@ -289,7 +289,7 @@ export default function QuestionsPage() {
       {/* Table */}
       {loading ? (
         <div className="card text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3" />
+          <div className="inline-block w-8 h-8 border-4 border-red-200 border-t-uob-red rounded-full animate-spin mb-3" />
           <p className="text-gray-500 text-sm">Loading questions...</p>
         </div>
       ) : filtered.length === 0 ? (
@@ -332,7 +332,7 @@ export default function QuestionsPage() {
                       <button
                         onClick={() => handleToggle(q)}
                         disabled={togglingId === q.id}
-                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${q.isActive ? 'bg-indigo-600' : 'bg-gray-300'} disabled:opacity-50`}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${q.isActive ? 'bg-uob-red' : 'bg-gray-300'} disabled:opacity-50`}
                         title={q.isActive ? 'Click to deactivate' : 'Click to activate'}
                       >
                         <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transform transition-transform ${q.isActive ? 'translate-x-4' : 'translate-x-1'}`} />
@@ -343,7 +343,7 @@ export default function QuestionsPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => { setModalQuestion(q); setShowModal(true) }}
-                          className="px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                          className="px-3 py-1.5 text-xs font-medium text-uob-red bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                         >
                           Edit
                         </button>

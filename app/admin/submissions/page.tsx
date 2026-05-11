@@ -107,7 +107,7 @@ export default function SubmissionsPage() {
       {/* Table */}
       {loading ? (
         <div className="card text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3" />
+          <div className="inline-block w-8 h-8 border-4 border-red-200 border-t-uob-red rounded-full animate-spin mb-3" />
           <p className="text-gray-500 text-sm">Loading submissions...</p>
         </div>
       ) : submissions.length === 0 ? (
@@ -162,7 +162,7 @@ export default function SubmissionsPage() {
                     <td className="px-4 py-4 text-right whitespace-nowrap">
                       <Link
                         href={`/admin/submissions/${s.id}`}
-                        className="px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-xs font-medium text-uob-red bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                       >
                         View Report
                       </Link>

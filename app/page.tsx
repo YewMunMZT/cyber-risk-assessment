@@ -32,25 +32,25 @@ const CATEGORIES = ['People', 'Process', 'Technology'] as const
 const CATEGORY_CONFIG = {
   People: {
     icon: '👥',
-    color: 'bg-violet-50 border-violet-200',
-    headerColor: 'bg-violet-700',
-    badge: 'bg-violet-100 text-violet-800',
+    headerBg: 'bg-uob-red',
+    sectionBg: 'bg-red-50 border-red-200',
+    badge: 'bg-red-100 text-red-900',
     weight: '20%',
     description: 'Security culture, training, and access management',
   },
   Process: {
     icon: '⚙️',
-    color: 'bg-blue-50 border-blue-200',
-    headerColor: 'bg-blue-700',
-    badge: 'bg-blue-100 text-blue-800',
+    headerBg: 'bg-uob-dark-2',
+    sectionBg: 'bg-gray-50 border-gray-200',
+    badge: 'bg-gray-200 text-gray-800',
     weight: '40%',
     description: 'Policies, procedures, and operational practices',
   },
   Technology: {
     icon: '🖥️',
-    color: 'bg-teal-50 border-teal-200',
-    headerColor: 'bg-teal-700',
-    badge: 'bg-teal-100 text-teal-800',
+    headerBg: 'bg-uob-dark-3',
+    sectionBg: 'bg-slate-50 border-slate-200',
+    badge: 'bg-slate-200 text-slate-800',
     weight: '40%',
     description: 'Security tools, infrastructure, and monitoring',
   },
@@ -108,7 +108,6 @@ export default function AssessmentPage() {
 
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {}
-
     if (!form.companyName.trim()) newErrors.companyName = 'Company name is required'
     if (!form.contactPersonName.trim()) newErrors.contactPersonName = 'Contact person name is required'
     if (!form.contactNumber.trim()) newErrors.contactNumber = 'Contact number is required'
@@ -122,13 +121,9 @@ export default function AssessmentPage() {
     } else if (parseInt(form.estimatedEndpoints) < 1) {
       newErrors.estimatedEndpoints = 'Endpoints must be a positive number'
     }
-
     for (const q of questions) {
-      if (!answers[q.id]) {
-        newErrors[`q_${q.id}`] = 'Please select an answer'
-      }
+      if (!answers[q.id]) newErrors[`q_${q.id}`] = 'Please select an answer'
     }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }, [form, answers, questions])
@@ -136,16 +131,12 @@ export default function AssessmentPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setGlobalError('')
-
     if (!validate()) {
-      // Scroll to first error
       const firstError = document.querySelector('[data-error="true"]')
       if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
-
     setSubmitting(true)
-
     try {
       const payload = {
         companyName: form.companyName.trim(),
@@ -161,21 +152,13 @@ export default function AssessmentPage() {
           selectedChoiceScore: answers[q.id].choiceScore,
         })),
       }
-
       const res = await fetch('/api/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-
       const data = await res.json()
-
-      if (!res.ok) {
-        setGlobalError(data.error || 'Submission failed. Please try again.')
-        setSubmitting(false)
-        return
-      }
-
+      if (!res.ok) { setGlobalError(data.error || 'Submission failed. Please try again.'); setSubmitting(false); return }
       router.push(`/result/${data.id}`)
     } catch {
       setGlobalError('Network error. Please check your connection and try again.')
@@ -192,27 +175,46 @@ export default function AssessmentPage() {
   const progressPct = questions.length > 0 ? Math.round((answeredCount / questions.length) * 100) : 0
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-navy-950 text-white shadow-lg">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-indigo-600 rounded-xl flex items-center justify-center text-2xl shadow-inner flex-shrink-0">
+    <div className="min-h-screen bg-uob-light">
+
+      {/* UOB Top Bar */}
+      <div className="bg-uob-dark">
+        <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* UOB Logo text style */}
+            <div className="text-uob-red font-black text-2xl tracking-tight leading-none select-none">UOB</div>
+            <div className="w-px h-5 bg-gray-600" />
+            <span className="text-gray-300 text-sm font-medium">Cyber Risk Assessment</span>
+          </div>
+          <div className="text-gray-500 text-xs">Confidential</div>
+        </div>
+      </div>
+
+      {/* Hero Header */}
+      <header className="bg-uob-dark border-b-4 border-uob-red">
+        <div className="max-w-4xl mx-auto px-4 py-10">
+          <div className="flex items-start gap-5">
+            <div className="w-14 h-14 bg-uob-red flex items-center justify-center text-2xl shadow flex-shrink-0 rounded">
               🛡️
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Cyber Risk Assessment</h1>
-              <p className="text-indigo-300 mt-1 text-sm md:text-base">
-                Understand your organisation&apos;s cybersecurity risk posture in minutes
+              <h1 className="text-3xl font-bold text-white tracking-tight">
+                Cybersecurity Risk Assessment
+              </h1>
+              <p className="text-gray-400 mt-2 text-sm leading-relaxed max-w-xl">
+                Assess your organisation&apos;s cybersecurity posture across three key risk dimensions.
+                Complete the questionnaire below to receive your personalised risk report.
               </p>
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-3 gap-3 text-center text-sm">
+          {/* Category weight pills */}
+          <div className="mt-6 flex flex-wrap gap-3">
             {CATEGORIES.map((cat) => (
-              <div key={cat} className="bg-white/10 rounded-lg px-3 py-2">
-                <div className="font-semibold text-white">{cat}</div>
-                <div className="text-indigo-300 text-xs">{CATEGORY_CONFIG[cat].weight} weight</div>
+              <div key={cat} className="flex items-center gap-2 bg-white/10 rounded px-3 py-1.5 text-xs">
+                <span>{CATEGORY_CONFIG[cat].icon}</span>
+                <span className="text-gray-300 font-medium">{cat}</span>
+                <span className="text-uob-red font-bold">{CATEGORY_CONFIG[cat].weight}</span>
               </div>
             ))}
           </div>
@@ -222,13 +224,15 @@ export default function AssessmentPage() {
       <main className="max-w-4xl mx-auto px-4 py-8">
         <form onSubmit={handleSubmit} noValidate>
 
-          {/* Company Details */}
+          {/* ── Company Details ── */}
           <section className="card mb-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center text-lg">🏢</div>
+            <div className="flex items-center gap-3 mb-5 pb-4 border-b border-gray-100">
+              <div className="w-8 h-8 bg-uob-red flex items-center justify-center text-white text-sm font-bold rounded flex-shrink-0">
+                1
+              </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Company Details</h2>
-                <p className="text-sm text-gray-500">Your information is used solely for this assessment report</p>
+                <h2 className="text-base font-bold text-uob-dark">Company Details</h2>
+                <p className="text-xs text-gray-500">Your information is kept strictly confidential</p>
               </div>
             </div>
 
@@ -236,41 +240,41 @@ export default function AssessmentPage() {
               {/* Company Name */}
               <div className="md:col-span-2" data-error={!!errors.companyName}>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Company Name <span className="text-red-500">*</span>
+                  Company Name <span className="text-uob-red">*</span>
                 </label>
                 <input
                   type="text"
-                  className={`input-field ${errors.companyName ? 'border-red-400 ring-1 ring-red-400' : ''}`}
+                  className={`input-field ${errors.companyName ? 'border-uob-red ring-1 ring-uob-red' : ''}`}
                   placeholder="e.g. Acme Corporation Pte. Ltd."
                   value={form.companyName}
                   onChange={(e) => updateForm('companyName', e.target.value)}
                 />
-                {errors.companyName && <p className="mt-1 text-xs text-red-600">{errors.companyName}</p>}
+                {errors.companyName && <p className="mt-1 text-xs text-uob-red">{errors.companyName}</p>}
               </div>
 
               {/* Contact Person */}
               <div data-error={!!errors.contactPersonName}>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Contact Person Name <span className="text-red-500">*</span>
+                  Contact Person Name <span className="text-uob-red">*</span>
                 </label>
                 <input
                   type="text"
-                  className={`input-field ${errors.contactPersonName ? 'border-red-400 ring-1 ring-red-400' : ''}`}
+                  className={`input-field ${errors.contactPersonName ? 'border-uob-red ring-1 ring-uob-red' : ''}`}
                   placeholder="Full name"
                   value={form.contactPersonName}
                   onChange={(e) => updateForm('contactPersonName', e.target.value)}
                 />
-                {errors.contactPersonName && <p className="mt-1 text-xs text-red-600">{errors.contactPersonName}</p>}
+                {errors.contactPersonName && <p className="mt-1 text-xs text-uob-red">{errors.contactPersonName}</p>}
               </div>
 
               {/* Contact Number */}
               <div data-error={!!errors.contactNumber}>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Contact Number <span className="text-red-500">*</span>
+                  Contact Number <span className="text-uob-red">*</span>
                 </label>
                 <div className="flex gap-2">
                   <select
-                    className="px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm font-medium text-gray-700 min-w-[90px]"
+                    className="px-3 py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-uob-red bg-white text-sm font-medium text-gray-700 min-w-[90px]"
                     value={form.countryCode}
                     onChange={(e) => updateForm('countryCode', e.target.value)}
                   >
@@ -292,28 +296,28 @@ export default function AssessmentPage() {
                   </select>
                   <input
                     type="tel"
-                    className={`input-field flex-1 ${errors.contactNumber ? 'border-red-400 ring-1 ring-red-400' : ''}`}
+                    className={`input-field flex-1 ${errors.contactNumber ? 'border-uob-red ring-1 ring-uob-red' : ''}`}
                     placeholder="9123 4567"
                     value={form.contactNumber}
                     onChange={(e) => updateForm('contactNumber', e.target.value)}
                   />
                 </div>
-                {errors.contactNumber && <p className="mt-1 text-xs text-red-600">{errors.contactNumber}</p>}
+                {errors.contactNumber && <p className="mt-1 text-xs text-uob-red">{errors.contactNumber}</p>}
               </div>
 
               {/* Email */}
               <div data-error={!!errors.contactEmail}>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Contact Email <span className="text-red-500">*</span>
+                  Contact Email <span className="text-uob-red">*</span>
                 </label>
                 <input
                   type="email"
-                  className={`input-field ${errors.contactEmail ? 'border-red-400 ring-1 ring-red-400' : ''}`}
+                  className={`input-field ${errors.contactEmail ? 'border-uob-red ring-1 ring-uob-red' : ''}`}
                   placeholder="you@company.com"
                   value={form.contactEmail}
                   onChange={(e) => updateForm('contactEmail', e.target.value)}
                 />
-                {errors.contactEmail && <p className="mt-1 text-xs text-red-600">{errors.contactEmail}</p>}
+                {errors.contactEmail && <p className="mt-1 text-xs text-uob-red">{errors.contactEmail}</p>}
               </div>
 
               {/* Website */}
@@ -333,26 +337,26 @@ export default function AssessmentPage() {
               {/* Endpoints */}
               <div data-error={!!errors.estimatedEndpoints}>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Estimated No. of Endpoints <span className="text-red-500">*</span>
+                  Estimated No. of Endpoints <span className="text-uob-red">*</span>
                 </label>
                 <input
                   type="number"
                   min="1"
-                  className={`input-field ${errors.estimatedEndpoints ? 'border-red-400 ring-1 ring-red-400' : ''}`}
+                  className={`input-field ${errors.estimatedEndpoints ? 'border-uob-red ring-1 ring-uob-red' : ''}`}
                   placeholder="e.g. 250"
                   value={form.estimatedEndpoints}
                   onChange={(e) => updateForm('estimatedEndpoints', e.target.value)}
                 />
-                {errors.estimatedEndpoints && <p className="mt-1 text-xs text-red-600">{errors.estimatedEndpoints}</p>}
+                {errors.estimatedEndpoints && <p className="mt-1 text-xs text-uob-red">{errors.estimatedEndpoints}</p>}
                 <p className="mt-1 text-xs text-gray-400">Laptops, desktops, servers, mobile devices, etc.</p>
               </div>
             </div>
           </section>
 
-          {/* Questionnaire */}
+          {/* ── Questionnaire ── */}
           {loading ? (
             <div className="card text-center py-16">
-              <div className="inline-block w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4" />
+              <div className="inline-block w-10 h-10 border-4 border-red-200 border-t-uob-red rounded-full animate-spin mb-4" />
               <p className="text-gray-500">Loading assessment questions...</p>
             </div>
           ) : questions.length === 0 ? (
@@ -361,19 +365,28 @@ export default function AssessmentPage() {
             </div>
           ) : (
             <>
-              {/* Progress bar */}
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-600">
-                    Questionnaire Progress
-                  </span>
-                  <span className="text-sm font-bold text-indigo-700">
+              {/* Section header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-uob-red flex items-center justify-center text-white text-sm font-bold rounded flex-shrink-0">
+                  2
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-uob-dark">Risk Assessment Questionnaire</h2>
+                  <p className="text-xs text-gray-500">Select one answer per question</p>
+                </div>
+              </div>
+
+              {/* Progress */}
+              <div className="mb-5">
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-xs text-gray-500 font-medium">Progress</span>
+                  <span className="text-xs font-bold text-uob-red">
                     {answeredCount} / {questions.length} answered
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500"
+                    className="bg-uob-red h-2 rounded-full transition-all duration-500"
                     style={{ width: `${progressPct}%` }}
                   />
                 </div>
@@ -386,15 +399,16 @@ export default function AssessmentPage() {
                 const cfg = CATEGORY_CONFIG[cat]
 
                 return (
-                  <section key={cat} className={`mb-6 rounded-xl border-2 overflow-hidden ${cfg.color}`}>
-                    <div className={`${cfg.headerColor} px-6 py-4 flex items-center gap-3`}>
+                  <section key={cat} className={`mb-5 rounded border-2 overflow-hidden ${cfg.sectionBg}`}>
+                    {/* Category header bar */}
+                    <div className={`${cfg.headerBg} px-5 py-4 flex items-center gap-3`}>
                       <span className="text-2xl">{cfg.icon}</span>
                       <div className="flex-1">
-                        <h2 className="text-white font-bold text-lg">{cat}</h2>
-                        <p className="text-white/80 text-sm">{cfg.description}</p>
+                        <h3 className="text-white font-bold text-base">{cat}</h3>
+                        <p className="text-white/70 text-xs">{cfg.description}</p>
                       </div>
-                      <div className="text-right">
-                        <div className="text-white text-xs font-medium opacity-80">Risk Weight</div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-white/70 text-xs">Risk Weight</div>
                         <div className="text-white font-bold text-lg">{cfg.weight}</div>
                       </div>
                     </div>
@@ -407,13 +421,13 @@ export default function AssessmentPage() {
                         return (
                           <div
                             key={q.id}
-                            className={`bg-white rounded-xl p-5 shadow-sm border-2 transition-colors ${
-                              hasError ? 'border-red-300' : chosen ? 'border-green-200' : 'border-transparent'
+                            className={`bg-white rounded border-2 p-5 transition-colors ${
+                              hasError ? 'border-uob-red' : chosen ? 'border-green-300' : 'border-transparent'
                             }`}
                             data-error={hasError}
                           >
-                            <p className="text-sm font-semibold text-gray-800 mb-4 leading-relaxed">
-                              <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white mr-2 flex-shrink-0 ${cfg.headerColor}`}>
+                            <p className="text-sm font-semibold text-gray-800 mb-4 leading-relaxed flex items-start gap-2">
+                              <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white flex-shrink-0 mt-0.5 ${cfg.headerBg}`}>
                                 {idx + 1}
                               </span>
                               {q.questionText}
@@ -425,20 +439,20 @@ export default function AssessmentPage() {
                                 return (
                                   <label
                                     key={ci}
-                                    className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer border transition-all ${
+                                    className={`flex items-start gap-3 p-3 rounded cursor-pointer border transition-all ${
                                       isSelected
-                                        ? 'bg-indigo-50 border-indigo-400 ring-1 ring-indigo-300'
-                                        : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-50/50'
+                                        ? 'bg-red-50 border-uob-red ring-1 ring-uob-red'
+                                        : 'border-gray-200 hover:border-red-200 hover:bg-red-50/40'
                                     }`}
                                   >
                                     <input
                                       type="radio"
                                       name={`question-${q.id}`}
-                                      className="mt-0.5 accent-indigo-600 flex-shrink-0"
+                                      className="mt-0.5 flex-shrink-0 accent-uob-red"
                                       checked={isSelected}
                                       onChange={() => selectAnswer(q.id, choice.text, choice.score)}
                                     />
-                                    <span className={`text-sm leading-snug ${isSelected ? 'text-indigo-900 font-medium' : 'text-gray-700'}`}>
+                                    <span className={`text-sm leading-snug ${isSelected ? 'text-uob-dark font-medium' : 'text-gray-700'}`}>
                                       {choice.text}
                                     </span>
                                   </label>
@@ -447,7 +461,7 @@ export default function AssessmentPage() {
                             </div>
 
                             {hasError && (
-                              <p className="mt-2 text-xs text-red-600 flex items-center gap-1">
+                              <p className="mt-2 text-xs text-uob-red flex items-center gap-1">
                                 <span>⚠</span> {errors[`q_${q.id}`]}
                               </p>
                             )}
@@ -463,15 +477,15 @@ export default function AssessmentPage() {
 
           {/* Global error */}
           {globalError && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-start gap-2">
-              <span className="text-red-500 mt-0.5">⚠</span>
+            <div className="mb-4 p-4 bg-red-50 border border-uob-red rounded text-sm text-uob-red-dark flex items-start gap-2">
+              <span className="mt-0.5">⚠</span>
               <span>{globalError}</span>
             </div>
           )}
 
           {/* Submit */}
           {!loading && questions.length > 0 && (
-            <div className="card mt-4">
+            <div className="card mt-4 bg-gray-50 border-gray-200">
               <div className="text-center">
                 <p className="text-sm text-gray-500 mb-4">
                   By submitting, a copy of your risk report will be emailed to you.
@@ -479,7 +493,7 @@ export default function AssessmentPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="btn-primary text-lg px-12 py-4 shadow-lg shadow-indigo-200 w-full md:w-auto"
+                  className="btn-primary text-base px-12 py-4 w-full md:w-auto"
                 >
                   {submitting ? (
                     <span className="flex items-center gap-3">
@@ -487,7 +501,7 @@ export default function AssessmentPage() {
                       Generating Your Risk Report...
                     </span>
                   ) : (
-                    '🛡️  Generate Risk Report'
+                    '  Generate Risk Report'
                   )}
                 </button>
               </div>
@@ -496,8 +510,15 @@ export default function AssessmentPage() {
         </form>
       </main>
 
-      <footer className="text-center py-8 text-xs text-gray-400 border-t border-gray-200 mt-8">
-        Cyber Risk Assessment System &bull; All data is kept confidential
+      {/* Footer */}
+      <footer className="bg-uob-dark mt-12">
+        <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="text-uob-red font-black text-lg">UOB</div>
+            <span className="text-gray-500 text-xs">Cyber Risk Assessment</span>
+          </div>
+          <p className="text-gray-600 text-xs">All information provided is kept strictly confidential.</p>
+        </div>
       </footer>
     </div>
   )
