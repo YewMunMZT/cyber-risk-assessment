@@ -36,29 +36,93 @@ interface Submission {
   answers: Answer[]
 }
 
-const RISK_CONFIG: Record<string, { bg: string; text: string; border: string; badge: string; icon: string }> = {
-  Low:          { bg: 'bg-green-600',   text: 'text-green-700',   border: 'border-green-400',   badge: 'bg-green-100 text-green-800',   icon: '✅' },
-  Moderate:     { bg: 'bg-amber-500',   text: 'text-amber-700',   border: 'border-amber-400',   badge: 'bg-amber-100 text-amber-800',   icon: '⚠️' },
-  High:         { bg: 'bg-orange-600',  text: 'text-orange-700',  border: 'border-orange-400',  badge: 'bg-orange-100 text-orange-800', icon: '🔶' },
-  Critical:     { bg: 'bg-uob-red',     text: 'text-uob-red',     border: 'border-uob-red',     badge: 'bg-red-100 text-red-900',       icon: '🚨' },
-  Unclassified: { bg: 'bg-gray-500',    text: 'text-gray-700',    border: 'border-gray-400',    badge: 'bg-gray-100 text-gray-800',     icon: '❓' },
+/* ─── SVG Icons ─────────────────────────────────────────────────── */
+const ShieldCheckIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+  </svg>
+)
+const MailIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+  </svg>
+)
+const PrinterIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
+  </svg>
+)
+const BarChartIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+  </svg>
+)
+const LightbulbIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+  </svg>
+)
+const BuildingIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+  </svg>
+)
+const ClipboardIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+  </svg>
+)
+const UsersIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+  </svg>
+)
+const CogIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+)
+const MonitorIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+  </svg>
+)
+const CheckIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+  </svg>
+)
+const XCircleIcon = ({ className = 'w-12 h-12' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+)
+
+/* ─── Risk / Category config ────────────────────────────────────── */
+const RISK_CONFIG: Record<string, { bg: string; text: string; border: string; badge: string; barColor: string }> = {
+  Low:          { bg: 'bg-green-600',  text: 'text-green-700',  border: 'border-green-400',  badge: 'bg-green-100 text-green-800',  barColor: '#16a34a' },
+  Moderate:     { bg: 'bg-amber-500',  text: 'text-amber-700',  border: 'border-amber-400',  badge: 'bg-amber-100 text-amber-800',  barColor: '#d97706' },
+  High:         { bg: 'bg-orange-600', text: 'text-orange-700', border: 'border-orange-400', badge: 'bg-orange-100 text-orange-800', barColor: '#ea580c' },
+  Critical:     { bg: 'bg-uob-red',    text: 'text-uob-red',    border: 'border-red-400',    badge: 'bg-red-100 text-red-900',      barColor: '#CC0000' },
+  Unclassified: { bg: 'bg-gray-500',   text: 'text-gray-700',   border: 'border-gray-400',   badge: 'bg-gray-100 text-gray-800',   barColor: '#6b7280' },
 }
 
-const CAT_CONFIG: Record<string, { icon: string; color: string }> = {
-  People:     { icon: '👥', color: 'text-uob-red' },
-  Process:    { icon: '⚙️', color: 'text-uob-dark-2' },
-  Technology: { icon: '🖥️', color: 'text-uob-dark-3' },
+const CAT_CONFIG = {
+  People:     { Icon: UsersIcon,  color: 'text-uob-navy' },
+  Process:    { Icon: CogIcon,    color: 'text-uob-navy' },
+  Technology: { Icon: MonitorIcon, color: 'text-uob-navy' },
 }
 
 function getRiskConfig(level: string) {
   return RISK_CONFIG[level] || RISK_CONFIG.Unclassified
 }
 
-function ScoreBar({ score, max = 10 }: { score: number; max?: number }) {
+function ScoreBar({ score, max = 10, color }: { score: number; max?: number; color: string }) {
   const pct = Math.min(100, (score / max) * 100)
   return (
-    <div className="w-full bg-gray-100 rounded-full h-2 mt-1">
-      <div className="h-2 rounded-full bg-uob-red transition-all duration-700" style={{ width: `${pct}%` }} />
+    <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1.5">
+      <div className="h-1.5 rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: color }} />
     </div>
   )
 }
@@ -81,8 +145,8 @@ export default function ResultPage() {
     return (
       <div className="min-h-screen bg-uob-light flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block w-12 h-12 border-4 border-red-200 border-t-uob-red rounded-full animate-spin mb-4" />
-          <p className="text-gray-500">Loading your risk report...</p>
+          <div className="inline-block w-12 h-12 border-4 border-blue-200 border-t-uob-navy rounded-full animate-spin mb-4" />
+          <p className="text-gray-500 text-sm">Loading your risk report...</p>
         </div>
       </div>
     )
@@ -91,10 +155,10 @@ export default function ResultPage() {
   if (error || !submission) {
     return (
       <div className="min-h-screen bg-uob-light flex items-center justify-center">
-        <div className="text-center card max-w-md">
-          <div className="text-5xl mb-4">❌</div>
+        <div className="card max-w-md text-center">
+          <XCircleIcon className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-gray-900 mb-2">Report Not Found</h2>
-          <p className="text-gray-500 mb-4">{error}</p>
+          <p className="text-gray-500 text-sm mb-5">{error}</p>
           <button onClick={() => router.push('/')} className="btn-primary">Start New Assessment</button>
         </div>
       </div>
@@ -114,68 +178,73 @@ export default function ResultPage() {
   return (
     <div className="min-h-screen bg-uob-light">
 
-      {/* UOB Top Bar */}
-      <div className="bg-uob-dark">
-        <div className="max-w-4xl mx-auto px-4 py-2 flex items-center gap-3">
-          <div className="text-uob-red font-black text-2xl tracking-tight">UOB</div>
-          <div className="w-px h-5 bg-gray-600" />
-          <span className="text-gray-300 text-sm font-medium">Cyber Risk Assessment</span>
+      {/* ── White Top Navigation ─────────────────────────────────── */}
+      <nav className="bg-white border-b border-uob-border sticky top-0 z-40 print:static">
+        <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-uob-red font-black text-2xl tracking-tight leading-none select-none">UOB</span>
+            <div className="w-px h-5 bg-gray-300" />
+            <span className="text-gray-600 text-sm font-medium">Cyber Risk Assessment</span>
+          </div>
+          <div className="flex items-center gap-2 print:hidden">
+            <button
+              onClick={() => window.print()}
+              className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5"
+            >
+              <PrinterIcon className="w-3.5 h-3.5" /> Print
+            </button>
+            <button onClick={() => router.push('/')} className="btn-primary py-1.5 px-3 text-xs">
+              New Assessment
+            </button>
+          </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Header */}
-      <header className="bg-uob-dark border-b-4 border-uob-red print:shadow-none">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-uob-red flex items-center justify-center text-xl rounded">🛡️</div>
-              <div>
-                <h1 className="text-lg font-bold text-white">Cybersecurity Risk Assessment Report</h1>
-                <p className="text-gray-400 text-xs">Ref: {submission.reportReferenceNo}</p>
-              </div>
+      {/* ── Navy Hero Header ─────────────────────────────────────── */}
+      <header style={{ backgroundColor: '#003DA5' }} className="print:hidden">
+        <div className="max-w-5xl mx-auto px-5 py-8">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-9 h-9 bg-white/10 flex items-center justify-center">
+              <ShieldCheckIcon className="w-5 h-5 text-white" />
             </div>
-            <div className="hidden md:flex items-center gap-2 print:hidden">
-              <button onClick={() => window.print()} className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded transition-colors">
-                🖨️ Print
-              </button>
-              <button onClick={() => router.push('/')} className="btn-primary text-sm py-2 px-4">
-                New Assessment
-              </button>
+            <div>
+              <h1 className="text-white font-bold text-lg leading-tight">Cybersecurity Risk Assessment Report</h1>
+              <p className="text-blue-200 text-xs font-mono mt-0.5">Ref: {submission.reportReferenceNo}</p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8 space-y-5">
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-5">
 
         {/* Email notice */}
-        <div className="bg-white border-l-4 border-uob-red rounded px-5 py-3 flex items-center gap-3 text-sm text-gray-700 shadow-sm">
-          <span className="text-xl">📧</span>
-          <span>A copy of this report has been emailed to <strong>{submission.contactEmail}</strong></span>
+        <div className="bg-blue-50 border border-blue-200 px-5 py-3 flex items-center gap-3 text-sm text-blue-800">
+          <MailIcon className="w-4 h-4 text-blue-500 flex-shrink-0" />
+          <span>A copy of this report has been sent to <strong>{submission.contactEmail}</strong></span>
         </div>
 
         {/* Risk Score Banner */}
-        <div className={`${risk.bg} text-white rounded shadow-lg overflow-hidden`}>
+        <div className={`${risk.bg} text-white overflow-hidden`}>
           <div className="px-8 py-10 text-center">
-            <div className="text-4xl mb-2">{risk.icon}</div>
             <div className="text-xs font-semibold uppercase tracking-widest opacity-80 mb-1">Overall Risk Score</div>
             <div className="text-7xl font-bold leading-none mb-3">{submission.overallRiskScore}</div>
-            <div className="inline-flex items-center gap-2 bg-black/20 rounded px-5 py-1.5 text-xl font-bold">
+            <div className="inline-flex items-center gap-2 bg-black/20 px-5 py-1.5 text-xl font-bold">
               {submission.overallRiskLevel} Risk
             </div>
             <div className="mt-3 text-xs opacity-60">Score range: 0 (lowest risk) — 10 (highest risk)</div>
           </div>
-          {/* UOB bottom accent */}
           <div className="h-1 bg-black/20" />
         </div>
 
-        {/* Score breakdown + Recommendation */}
+        {/* Score Breakdown + Recommendation */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
           {/* Breakdown */}
           <div className="card">
-            <h2 className="text-sm font-bold text-uob-dark mb-4 flex items-center gap-2 pb-3 border-b border-gray-100">
-              <span className="w-5 h-5 bg-uob-red rounded text-white text-xs flex items-center justify-center">📊</span>
+            <h2 className="text-sm font-bold text-uob-dark mb-4 pb-3 border-b border-gray-100 flex items-center gap-2">
+              <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
+                <BarChartIcon className="w-3.5 h-3.5 text-white" />
+              </span>
               Risk Score Breakdown
             </h2>
             <div className="space-y-5">
@@ -191,7 +260,8 @@ export default function ResultPage() {
                   <div key={cat.label}>
                     <div className="flex items-center justify-between mb-1">
                       <span className={`text-sm font-semibold flex items-center gap-1.5 ${cfg.color}`}>
-                        <span>{cfg.icon}</span> {cat.label}
+                        <cfg.Icon className="w-3.5 h-3.5" />
+                        {cat.label}
                         <span className="text-xs text-gray-400 font-normal">({cat.weight})</span>
                       </span>
                       <div className="text-right">
@@ -199,14 +269,13 @@ export default function ResultPage() {
                         <span className="text-xs text-gray-400 ml-1">weighted</span>
                       </div>
                     </div>
-                    <ScoreBar score={cat.raw} />
+                    <ScoreBar score={cat.raw} color={risk.barColor} />
                     <div className="text-xs text-gray-400 mt-0.5">Raw: {cat.raw}</div>
                   </div>
                 )
               })}
             </div>
-            {/* Total */}
-            <div className={`mt-5 flex justify-between items-center p-3 rounded border-2 ${risk.border} ${risk.badge}`}>
+            <div className={`mt-5 flex justify-between items-center p-3 border-2 ${risk.border} ${risk.badge}`}>
               <span className="font-bold text-sm">Overall Weighted Score</span>
               <span className="text-2xl font-bold">{submission.overallRiskScore}</span>
             </div>
@@ -214,12 +283,14 @@ export default function ResultPage() {
 
           {/* Recommendation */}
           <div className={`card border-l-4 ${risk.border}`}>
-            <h2 className="text-sm font-bold text-uob-dark mb-3 flex items-center gap-2 pb-3 border-b border-gray-100">
-              <span className="w-5 h-5 bg-uob-red rounded text-white text-xs flex items-center justify-center">💡</span>
+            <h2 className="text-sm font-bold text-uob-dark mb-3 pb-3 border-b border-gray-100 flex items-center gap-2">
+              <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
+                <LightbulbIcon className="w-3.5 h-3.5 text-white" />
+              </span>
               Recommendation
             </h2>
-            <span className={`px-2.5 py-0.5 rounded text-xs font-bold mb-3 inline-block ${risk.badge}`}>
-              {risk.icon} {submission.overallRiskLevel} Risk
+            <span className={`px-2.5 py-0.5 text-xs font-bold mb-3 inline-block ${risk.badge}`}>
+              {submission.overallRiskLevel} Risk
             </span>
             <h3 className={`font-bold text-sm mb-3 ${risk.text}`}>{submission.recommendationTitle}</h3>
             <p className="text-sm text-gray-600 leading-relaxed">{submission.recommendationText}</p>
@@ -229,7 +300,9 @@ export default function ResultPage() {
         {/* Company Details */}
         <div className="card">
           <h2 className="text-sm font-bold text-uob-dark mb-4 pb-3 border-b border-gray-100 flex items-center gap-2">
-            <span className="w-5 h-5 bg-uob-red rounded text-white text-xs flex items-center justify-center">🏢</span>
+            <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
+              <BuildingIcon className="w-3.5 h-3.5 text-white" />
+            </span>
             Company Details
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -244,7 +317,7 @@ export default function ResultPage() {
               { label: 'Report Reference', value: submission.reportReferenceNo },
             ].map(({ label, value }) => (
               <div key={label} className="flex flex-col gap-0.5">
-                <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">{label}</span>
+                <span className="text-xs text-gray-400 font-semibold uppercase tracking-wide">{label}</span>
                 <span className="text-sm text-gray-900 font-medium break-all">{value}</span>
               </div>
             ))}
@@ -254,7 +327,9 @@ export default function ResultPage() {
         {/* Assessment Answers */}
         <div className="card">
           <h2 className="text-sm font-bold text-uob-dark mb-5 pb-3 border-b border-gray-100 flex items-center gap-2">
-            <span className="w-5 h-5 bg-uob-red rounded text-white text-xs flex items-center justify-center">📋</span>
+            <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
+              <ClipboardIcon className="w-3.5 h-3.5 text-white" />
+            </span>
             Assessment Responses
           </h2>
           {(['People', 'Process', 'Technology'] as const).map((cat) => {
@@ -264,15 +339,15 @@ export default function ResultPage() {
             return (
               <div key={cat} className="mb-6 last:mb-0">
                 <h3 className={`text-xs font-bold mb-3 flex items-center gap-1.5 uppercase tracking-wider ${cfg.color}`}>
-                  <span>{cfg.icon}</span> {cat}
+                  <cfg.Icon className="w-3.5 h-3.5" /> {cat}
                 </h3>
                 <div className="space-y-2">
                   {catAnswers.map((a, idx) => (
-                    <div key={a.id} className="bg-gray-50 rounded p-4 border border-gray-100">
+                    <div key={a.id} className="bg-gray-50 p-4 border border-gray-100">
                       <div className="text-xs font-semibold text-gray-400 mb-1">Q{idx + 1}</div>
                       <div className="text-sm font-medium text-gray-800 mb-2">{a.questionTextSnapshot}</div>
                       <div className="flex items-start gap-2">
-                        <span className="text-green-600 text-sm">✓</span>
+                        <CheckIcon className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                         <span className="text-sm text-gray-700 leading-snug">{a.selectedChoiceText}</span>
                       </div>
                     </div>
@@ -284,20 +359,24 @@ export default function ResultPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center print:hidden">
-          <button onClick={() => window.print()} className="btn-secondary">🖨️ Print / Save as PDF</button>
-          <button onClick={() => router.push('/')} className="btn-primary">Start New Assessment</button>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center print:hidden pb-4">
+          <button onClick={() => window.print()} className="btn-secondary flex items-center gap-2">
+            <PrinterIcon className="w-4 h-4" /> Print / Save as PDF
+          </button>
+          <button onClick={() => router.push('/')} className="btn-primary">
+            Start New Assessment
+          </button>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-uob-dark mt-12">
-        <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <footer className="bg-uob-dark mt-4 print:hidden">
+        <div className="max-w-5xl mx-auto px-5 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="text-uob-red font-black text-lg">UOB</div>
+            <span className="text-uob-red font-black text-lg">UOB</span>
             <span className="text-gray-500 text-xs">Cyber Risk Assessment</span>
           </div>
-          <p className="text-gray-600 text-xs">Ref: {submission.reportReferenceNo}</p>
+          <p className="text-gray-600 text-xs font-mono">Ref: {submission.reportReferenceNo}</p>
         </div>
       </footer>
     </div>

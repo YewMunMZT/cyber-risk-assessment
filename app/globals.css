@@ -3,51 +3,74 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    box-sizing: border-box;
-  }
+  *, *::before, *::after { box-sizing: border-box; }
 
-  html {
-    scroll-behavior: smooth;
-  }
+  html { scroll-behavior: smooth; }
 
   body {
-    @apply antialiased text-gray-900;
-    font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+    @apply antialiased text-uob-dark bg-uob-light;
+    font-family: 'Inter', Arial, 'Helvetica Neue', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #1A1A1A;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', Arial, 'Helvetica Neue', sans-serif;
+    font-weight: 700;
+    color: #1A1A1A;
   }
 }
 
 @layer components {
-  /* Primary UOB Red button */
+  /* UOB Navy primary button */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-3 bg-uob-red text-white font-semibold rounded
-           hover:bg-uob-red-dark focus:outline-none focus:ring-2 focus:ring-uob-red focus:ring-offset-2
-           transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3
+           bg-uob-navy text-white text-sm font-semibold tracking-wide
+           hover:bg-uob-navy-dark focus:outline-none focus:ring-2
+           focus:ring-uob-navy focus:ring-offset-2
+           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    border-radius: 2px;
   }
 
-  /* Secondary outlined button */
+  /* Outlined secondary button */
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-4 py-2 bg-white text-gray-700 font-medium rounded
-           border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-uob-red
-           focus:ring-offset-2 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5
+           bg-white text-uob-navy text-sm font-semibold
+           border border-uob-navy hover:bg-blue-50
+           focus:outline-none focus:ring-2 focus:ring-uob-navy focus:ring-offset-2
+           transition-colors duration-150;
+    border-radius: 2px;
   }
 
   /* Danger button */
   .btn-danger {
-    @apply inline-flex items-center justify-center px-4 py-2 bg-uob-red-deep text-white font-medium rounded
-           hover:bg-uob-red-dark focus:outline-none focus:ring-2 focus:ring-uob-red focus:ring-offset-2
-           transition-colors;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5
+           bg-uob-red text-white text-sm font-semibold
+           hover:bg-uob-red-dark focus:outline-none focus:ring-2
+           focus:ring-uob-red focus:ring-offset-2
+           transition-colors duration-150;
+    border-radius: 2px;
   }
 
-  /* Input field */
+  /* Form input */
   .input-field {
-    @apply w-full px-4 py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2
-           focus:ring-uob-red focus:border-transparent transition-colors text-gray-900 placeholder-gray-400
-           bg-white;
+    @apply w-full px-3.5 py-2.5 text-sm border border-gray-300 bg-white
+           text-uob-dark placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-uob-navy focus:border-uob-navy
+           transition-colors duration-150;
+    border-radius: 2px;
   }
 
-  /* Card */
+  /* White card with subtle shadow */
   .card {
-    @apply bg-white rounded shadow-sm border border-gray-200 p-6;
+    @apply bg-white border border-uob-border p-6;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px 0 rgba(0,0,0,0.06);
+  }
+
+  /* Section label above headings */
+  .section-label {
+    @apply text-xs font-semibold text-uob-navy uppercase tracking-widest mb-1;
   }
 }

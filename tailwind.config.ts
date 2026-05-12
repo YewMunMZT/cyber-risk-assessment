@@ -6,24 +6,36 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    { pattern: /bg-uob-/ },
+    { pattern: /text-uob-/ },
+    { pattern: /border-uob-/ },
+    { pattern: /ring-uob-/ },
+  ],
   theme: {
     extend: {
       colors: {
         uob: {
-          red:       '#CC0000',
-          'red-dark':'#A80000',
-          'red-deep':'#800000',
-          'red-light':'#FF1A1A',
-          dark:      '#1B1B1B',
-          'dark-2':  '#2D2D2D',
-          'dark-3':  '#3D3D3D',
-          gray:      '#6B6B6B',
-          'light':   '#F5F5F5',
-          'border':  '#E0E0E0',
+          // Primary corporate navy (buttons, active states, accents)
+          navy:        '#003DA5',
+          'navy-dark': '#002780',
+          'navy-light':'#0050CC',
+          // Brand red (logo only)
+          red:         '#CC0000',
+          'red-dark':  '#A80000',
+          // Neutrals
+          dark:        '#1A1A1A',
+          'gray-text': '#6B7280',
+          light:       '#F5F7FA',
+          border:      '#E5E7EB',
         },
       },
       fontFamily: {
-        sans: ['Arial', 'Helvetica Neue', 'Helvetica', 'sans-serif'],
+        sans: ['Inter', 'Arial', 'Helvetica Neue', 'sans-serif'],
+      },
+      boxShadow: {
+        'card': '0 1px 4px 0 rgba(0,0,0,0.08)',
+        'nav':  '0 1px 0 0 #E5E7EB',
       },
     },
   },

@@ -37,29 +37,88 @@ interface Submission {
   answers: Answer[]
 }
 
-const RISK_CONFIG: Record<string, { bg: string; text: string; border: string; badge: string }> = {
-  Low: { bg: 'bg-green-600', text: 'text-green-700', border: 'border-green-300', badge: 'bg-green-100 text-green-800' },
-  Moderate: { bg: 'bg-amber-500', text: 'text-amber-700', border: 'border-amber-300', badge: 'bg-amber-100 text-amber-800' },
-  High: { bg: 'bg-orange-600', text: 'text-orange-700', border: 'border-orange-300', badge: 'bg-orange-100 text-orange-800' },
-  Critical: { bg: 'bg-red-600', text: 'text-red-700', border: 'border-red-300', badge: 'bg-red-100 text-red-800' },
-  Unclassified: { bg: 'bg-gray-500', text: 'text-gray-700', border: 'border-gray-300', badge: 'bg-gray-100 text-gray-800' },
+/* ─── SVG Icons ─────────────────────────────────────────────────── */
+const PrinterIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
+  </svg>
+)
+const TrashIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+  </svg>
+)
+const BarChartIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+  </svg>
+)
+const LightbulbIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+  </svg>
+)
+const BuildingIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+  </svg>
+)
+const ClipboardIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+  </svg>
+)
+const UsersIcon = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+  </svg>
+)
+const CogIcon = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+)
+const MonitorIcon = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+  </svg>
+)
+const CheckIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+  </svg>
+)
+
+/* ─── Config ─────────────────────────────────────────────────────── */
+const RISK_CONFIG: Record<string, { bg: string; text: string; border: string; badge: string; barColor: string }> = {
+  Low:          { bg: 'bg-green-600',  text: 'text-green-700',  border: 'border-green-300',  badge: 'bg-green-100 text-green-800',  barColor: '#16a34a' },
+  Moderate:     { bg: 'bg-amber-500',  text: 'text-amber-700',  border: 'border-amber-300',  badge: 'bg-amber-100 text-amber-800',  barColor: '#d97706' },
+  High:         { bg: 'bg-orange-600', text: 'text-orange-700', border: 'border-orange-300', badge: 'bg-orange-100 text-orange-800', barColor: '#ea580c' },
+  Critical:     { bg: 'bg-uob-red',    text: 'text-uob-red',    border: 'border-red-300',    badge: 'bg-red-100 text-red-800',      barColor: '#CC0000' },
+  Unclassified: { bg: 'bg-gray-500',   text: 'text-gray-700',   border: 'border-gray-300',   badge: 'bg-gray-100 text-gray-800',   barColor: '#6b7280' },
 }
 
-const CAT_ICONS: Record<string, string> = { People: '👥', Process: '⚙️', Technology: '🖥️' }
+const CAT_CONFIG = {
+  People:     { Icon: UsersIcon,   color: 'text-uob-navy' },
+  Process:    { Icon: CogIcon,     color: 'text-uob-navy' },
+  Technology: { Icon: MonitorIcon, color: 'text-uob-navy' },
+}
 
 function getRisk(level: string) {
   return RISK_CONFIG[level] || RISK_CONFIG.Unclassified
 }
 
-function ScoreBar({ score, max = 10 }: { score: number; max?: number }) {
+function ScoreBar({ score, max = 10, color }: { score: number; max?: number; color: string }) {
   const pct = Math.min(100, (score / max) * 100)
   return (
     <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1">
-      <div className="h-1.5 rounded-full bg-indigo-500" style={{ width: `${pct}%` }} />
+      <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
     </div>
   )
 }
 
+/* ─── Page ──────────────────────────────────────────────────────── */
 export default function SubmissionDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
@@ -85,7 +144,7 @@ export default function SubmissionDetailPage() {
     return (
       <div className="p-8 flex items-center justify-center min-h-96">
         <div className="text-center">
-          <div className="inline-block w-10 h-10 border-4 border-red-200 border-t-uob-red rounded-full animate-spin mb-3" />
+          <div className="inline-block w-10 h-10 border-4 border-blue-200 border-t-uob-navy rounded-full animate-spin mb-3" />
           <p className="text-gray-500 text-sm">Loading report...</p>
         </div>
       </div>
@@ -96,7 +155,7 @@ export default function SubmissionDetailPage() {
     return (
       <div className="p-8 text-center">
         <p className="text-gray-500">Submission not found.</p>
-        <Link href="/admin/submissions" className="text-uob-red hover:underline text-sm mt-2 inline-block">← Back to submissions</Link>
+        <Link href="/admin/submissions" className="text-uob-navy hover:underline text-sm mt-2 inline-block">← Back to submissions</Link>
       </div>
     )
   }
@@ -113,68 +172,80 @@ export default function SubmissionDetailPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-5xl">
+
       {/* Breadcrumb + Actions */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2 text-sm">
-          <Link href="/admin/submissions" className="text-uob-red hover:underline">Submitted Reports</Link>
+          <Link href="/admin/submissions" className="text-uob-navy hover:underline">Submitted Reports</Link>
           <span className="text-gray-400">›</span>
-          <span className="text-gray-600 font-mono">{submission.reportReferenceNo}</span>
+          <span className="text-gray-600 font-mono text-xs">{submission.reportReferenceNo}</span>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => window.print()}
-            className="btn-secondary text-sm py-2"
+            className="btn-secondary py-2 px-3 text-xs flex items-center gap-1.5"
           >
-            🖨️ Print
+            <PrinterIcon className="w-3.5 h-3.5" /> Print
           </button>
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="px-3 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
+            style={{ borderRadius: 2 }}
           >
-            🗑️ Delete
+            <TrashIcon className="w-3.5 h-3.5" /> Delete
           </button>
         </div>
       </div>
 
       {/* Risk Score Banner */}
-      <div className={`${risk.bg} text-white rounded-2xl px-8 py-8 mb-6 text-center shadow-lg`}>
+      <div className={`${risk.bg} text-white px-8 py-8 mb-6 text-center`}>
         <div className="text-xs font-semibold uppercase tracking-widest opacity-80 mb-1">Overall Risk Score</div>
         <div className="text-6xl font-bold mb-2">{submission.overallRiskScore}</div>
-        <div className={`inline-flex items-center gap-2 bg-white/20 rounded-full px-5 py-1.5 text-lg font-semibold`}>
+        <div className="inline-flex items-center gap-2 bg-black/20 px-5 py-1.5 text-lg font-semibold">
           {submission.overallRiskLevel} Risk
         </div>
         <div className="mt-3 text-xs opacity-70">Ref: {submission.reportReferenceNo} &nbsp;|&nbsp; Submitted: {submittedAt}</div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+
         {/* Score Breakdown */}
         <div className="card">
-          <h2 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">📊 Risk Score Breakdown</h2>
+          <h2 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100 flex items-center gap-2">
+            <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
+              <BarChartIcon className="w-3.5 h-3.5 text-white" />
+            </span>
+            Risk Score Breakdown
+          </h2>
           <div className="space-y-4">
             {(
               [
-                { label: 'People', raw: submission.peopleRawScore, weighted: submission.peopleWeightedScore, weight: '20%' },
-                { label: 'Process', raw: submission.processRawScore, weighted: submission.processWeightedScore, weight: '40%' },
+                { label: 'People',     raw: submission.peopleRawScore,     weighted: submission.peopleWeightedScore,     weight: '20%' },
+                { label: 'Process',    raw: submission.processRawScore,    weighted: submission.processWeightedScore,    weight: '40%' },
                 { label: 'Technology', raw: submission.technologyRawScore, weighted: submission.technologyWeightedScore, weight: '40%' },
               ] as const
-            ).map((cat) => (
-              <div key={cat.label}>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-medium text-gray-700">
-                    {CAT_ICONS[cat.label as keyof typeof CAT_ICONS]} {cat.label}
-                    <span className="text-xs text-gray-400 ml-1">({cat.weight})</span>
-                  </span>
-                  <div className="text-right">
-                    <span className="text-sm font-bold text-gray-900">{cat.weighted}</span>
-                    <span className="text-xs text-gray-400 ml-1">weighted</span>
+            ).map((cat) => {
+              const cfg = CAT_CONFIG[cat.label as keyof typeof CAT_CONFIG]
+              return (
+                <div key={cat.label}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className={`text-sm font-medium flex items-center gap-1.5 ${cfg.color}`}>
+                      <cfg.Icon />
+                      {cat.label}
+                      <span className="text-xs text-gray-400 font-normal">({cat.weight})</span>
+                    </span>
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-gray-900">{cat.weighted}</span>
+                      <span className="text-xs text-gray-400 ml-1">weighted</span>
+                    </div>
                   </div>
+                  <ScoreBar score={cat.raw} color={risk.barColor} />
+                  <div className="text-xs text-gray-400 mt-0.5">Raw: {cat.raw}</div>
                 </div>
-                <ScoreBar score={cat.raw} />
-                <div className="text-xs text-gray-400 mt-0.5">Raw: {cat.raw}</div>
-              </div>
-            ))}
+              )
+            })}
           </div>
-          <div className={`mt-4 flex justify-between items-center p-3 rounded-xl border ${risk.border} ${risk.badge}`}>
+          <div className={`mt-4 flex justify-between items-center p-3 border ${risk.border} ${risk.badge}`} style={{ borderRadius: 2 }}>
             <span className="font-bold text-sm">Overall Score</span>
             <span className="text-xl font-bold">{submission.overallRiskScore}</span>
           </div>
@@ -182,8 +253,13 @@ export default function SubmissionDetailPage() {
 
         {/* Recommendation */}
         <div className={`card border-l-4 ${risk.border}`}>
-          <h2 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">💡 Recommendation</h2>
-          <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold mb-3 inline-block ${risk.badge}`}>
+          <h2 className="text-sm font-bold text-gray-900 mb-3 pb-3 border-b border-gray-100 flex items-center gap-2">
+            <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
+              <LightbulbIcon className="w-3.5 h-3.5 text-white" />
+            </span>
+            Recommendation
+          </h2>
+          <span className={`px-2.5 py-0.5 text-xs font-bold mb-3 inline-block ${risk.badge}`}>
             {submission.overallRiskLevel} Risk
           </span>
           <h3 className={`font-bold text-sm mb-2 ${risk.text}`}>{submission.recommendationTitle}</h3>
@@ -192,19 +268,24 @@ export default function SubmissionDetailPage() {
       </div>
 
       {/* Company Details */}
-      <div className="card mb-6">
-        <h2 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">🏢 Company Information</h2>
+      <div className="card mb-5">
+        <h2 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100 flex items-center gap-2">
+          <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
+            <BuildingIcon className="w-3.5 h-3.5 text-white" />
+          </span>
+          Company Information
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[
-            { label: 'Company Name', value: submission.companyName },
+            { label: 'Company Name',   value: submission.companyName },
             { label: 'Contact Person', value: submission.contactPersonName },
-            { label: 'Email', value: submission.contactEmail },
+            { label: 'Email',          value: submission.contactEmail },
             { label: 'Contact Number', value: `${submission.countryCode} ${submission.contactNumber}` },
-            { label: 'Website', value: submission.website || '—' },
+            { label: 'Website',        value: submission.website || '—' },
             { label: 'Est. Endpoints', value: submission.estimatedEndpoints.toLocaleString() },
           ].map(({ label, value }) => (
             <div key={label}>
-              <div className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">{label}</div>
+              <div className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">{label}</div>
               <div className="text-sm text-gray-900 font-medium break-all">{value}</div>
             </div>
           ))}
@@ -213,24 +294,30 @@ export default function SubmissionDetailPage() {
 
       {/* Answers by Category */}
       <div className="card">
-        <h2 className="text-sm font-bold text-gray-900 mb-5 flex items-center gap-2">📋 Assessment Answers</h2>
+        <h2 className="text-sm font-bold text-gray-900 mb-5 pb-3 border-b border-gray-100 flex items-center gap-2">
+          <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
+            <ClipboardIcon className="w-3.5 h-3.5 text-white" />
+          </span>
+          Assessment Answers
+        </h2>
         {(['People', 'Process', 'Technology'] as const).map((cat) => {
           const catAnswers = answersByCategory[cat] || []
           if (catAnswers.length === 0) return null
+          const cfg = CAT_CONFIG[cat]
           return (
             <div key={cat} className="mb-6 last:mb-0">
-              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <span>{CAT_ICONS[cat]}</span> {cat}
+              <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5 ${cfg.color}`}>
+                <cfg.Icon /> {cat}
               </h3>
               <div className="space-y-3">
                 {catAnswers.map((a, idx) => (
-                  <div key={a.id} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <div key={a.id} className="bg-gray-50 p-4 border border-gray-100" style={{ borderRadius: 2 }}>
                     <div className="text-xs font-semibold text-gray-400 mb-1">Q{idx + 1}</div>
                     <div className="text-sm font-medium text-gray-800 mb-2">{a.questionTextSnapshot}</div>
                     <div className="flex items-start gap-2">
-                      <span className="text-green-600 text-sm">✓</span>
+                      <CheckIcon className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                       <span className="text-sm text-gray-700">{a.selectedChoiceText}</span>
-                      <span className="ml-auto text-xs font-mono font-bold text-gray-500">Score: {a.selectedChoiceScore}</span>
+                      <span className="ml-auto text-xs font-mono font-bold text-gray-400 whitespace-nowrap">Score: {a.selectedChoiceScore}</span>
                     </div>
                   </div>
                 ))}
@@ -240,13 +327,15 @@ export default function SubmissionDetailPage() {
         })}
       </div>
 
-      {/* Delete Confirm */}
+      {/* Delete Confirm Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
-            <div className="text-3xl mb-3">🗑️</div>
+          <div className="bg-white shadow-2xl p-6 max-w-sm w-full" style={{ borderRadius: 2 }}>
+            <div className="w-10 h-10 bg-red-100 flex items-center justify-center mb-4">
+              <TrashIcon className="w-5 h-5 text-red-600" />
+            </div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Submission?</h3>
-            <p className="text-sm text-gray-500 mb-2">
+            <p className="text-sm text-gray-500 mb-1">
               <strong>{submission.companyName}</strong> — {submission.reportReferenceNo}
             </p>
             <p className="text-sm text-gray-500 mb-5">This will permanently delete the submission and all answers. This action cannot be undone.</p>
