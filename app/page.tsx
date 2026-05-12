@@ -37,11 +37,6 @@ interface AnswerState {
 
 const CATEGORIES = ['People', 'Process', 'Technology'] as const
 
-const CAT_META = {
-  People:     { label: 'People',     weight: '20%', description: 'Security culture, training & access management' },
-  Process:    { label: 'Process',    weight: '40%', description: 'Policies, procedures & operational practices' },
-  Technology: { label: 'Technology', weight: '40%', description: 'Security tools, infrastructure & monitoring' },
-}
 
 function getChoices(q: Question): Choice[] {
   return [
@@ -129,11 +124,6 @@ const GlobeIcon = () => (
   </svg>
 )
 
-const CAT_ICONS = {
-  People:     <UsersIcon />,
-  Process:    <SettingsIcon />,
-  Technology: <MonitorIcon />,
-}
 
 /* ── Grade colour helper ─────────────────────────────────────────── */
 function gradeColor(g: string) {
@@ -579,28 +569,11 @@ export default function AssessmentPage() {
               {CATEGORIES.map((cat, catIdx) => {
                 const qs = byCategory[cat] || []
                 if (qs.length === 0) return null
-                const meta = CAT_META[cat]
 
                 return (
                   <div key={cat} className="mb-6">
-                    {/* Category header */}
-                    <div className="flex items-center gap-3 px-5 py-4 bg-white border border-uob-border border-b-0"
-                      style={{ borderRadius: '2px 2px 0 0' }}>
-                      <div className="w-8 h-8 bg-uob-navy/10 text-uob-navy flex items-center justify-center flex-shrink-0" style={{ borderRadius: 2 }}>
-                        {CAT_ICONS[cat]}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-sm font-bold text-uob-dark">{meta.label}</h3>
-                        <p className="text-xs text-gray-500">{meta.description}</p>
-                      </div>
-                      <div className="hidden sm:block text-right flex-shrink-0">
-                        <div className="text-xs text-gray-400">Risk Weight</div>
-                        <div className="text-sm font-bold text-uob-navy">{meta.weight}</div>
-                      </div>
-                    </div>
-
                     {/* Questions */}
-                    <div className="border border-uob-border border-t-uob-navy bg-white divide-y divide-gray-100" style={{ borderTopWidth: 2, borderRadius: '0 0 2px 2px' }}>
+                    <div className="border border-uob-border bg-white divide-y divide-gray-100" style={{ borderRadius: 2 }}>
                       {qs.map((q, idx) => {
                         const chosen = answers[q.id]
                         const hasError = !!errors[`q_${q.id}`]
