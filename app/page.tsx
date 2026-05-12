@@ -370,14 +370,13 @@ export default function AssessmentPage() {
       {/* ── Top Navigation Bar ──────────────────────────────────────── */}
       <nav className="bg-white border-b border-uob-border" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
         <div className="max-w-5xl mx-auto px-6 py-0 flex items-center" style={{ height: 64 }}>
-          {/* UOB Logo */}
           <div className="flex items-center gap-3 select-none">
-            <span className="text-uob-red font-black tracking-tight" style={{ fontSize: 28, lineHeight: 1 }}>UOB</span>
-            <div className="w-px bg-gray-200" style={{ height: 24 }} />
-            <span className="text-uob-dark font-medium text-sm">Cybersecurity Risk Assessment</span>
-          </div>
-          <div className="ml-auto text-xs text-gray-400 font-medium hidden sm:block">
-            Confidential &nbsp;|&nbsp; For Authorised Use Only
+            <div className="w-7 h-7 bg-uob-navy flex items-center justify-center flex-shrink-0" style={{ borderRadius: 2 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <span className="text-uob-dark font-semibold text-sm">Cybersecurity Risk Assessment</span>
           </div>
         </div>
       </nav>
@@ -401,8 +400,7 @@ export default function AssessmentPage() {
             </div>
           </div>
         </div>
-        {/* Navy-to-light gradient bar */}
-        <div className="h-1 bg-uob-red" />
+        <div className="h-1 bg-white/10" />
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-10">
@@ -667,13 +665,16 @@ export default function AssessmentPage() {
       <footer className="bg-uob-dark text-gray-400 mt-16">
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="text-uob-red font-black text-xl" style={{ letterSpacing: '-0.02em' }}>UOB</span>
-              <div className="w-px bg-gray-700 h-4" />
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 bg-uob-navy flex items-center justify-center" style={{ borderRadius: 2 }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </div>
               <span className="text-xs text-gray-500">Cybersecurity Risk Assessment</span>
             </div>
             <p className="text-xs text-gray-600">
-              All information is kept strictly confidential. &copy; {new Date().getFullYear()} United Overseas Bank Limited.
+              All information is kept strictly confidential. &copy; {new Date().getFullYear()}
             </p>
           </div>
         </div>

@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'UOB Cyber Risk Assessment',
-  description: 'Assess your organisation\'s cybersecurity risk posture with UOB\'s comprehensive questionnaire.',
+  title: 'Cybersecurity Risk Assessment',
+  description: 'Assess your organisation\'s cybersecurity risk posture with our comprehensive questionnaire.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
