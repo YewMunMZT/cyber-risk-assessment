@@ -236,6 +236,7 @@ export default function AssessmentPage() {
   const router = useRouter()
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [globalError, setGlobalError] = useState('')
@@ -289,12 +290,29 @@ export default function AssessmentPage() {
     }
   }, [])
 
-  useEffect(() => {
-    fetch('/api/questions?activeOnly=true')
-      .then((r) => r.json())
-      .then((d) => { setQuestions(Array.isArray(d) ? d : []); setLoading(false) })
-      .catch(() => setLoading(false))
+  const loadQuestions = useCallback(() => {
+    setLoading(true)
+    setLoadError(false)
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 10000) // 10 s timeout
+    fetch('/api/questions?activeOnly=true', { signal: controller.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
+      .then((d) => {
+        setQuestions(Array.isArray(d) ? d : [])
+        setLoading(false)
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') console.error('Questions fetch error:', err)
+        setLoadError(true)
+        setLoading(false)
+      })
+      .finally(() => clearTimeout(timer))
   }, [])
+
+  useEffect(() => { loadQuestions() }, [loadQuestions])
 
   const updateForm = (field: string, value: string) => {
     setForm((p) => ({ ...p, [field]: value }))
@@ -539,6 +557,22 @@ export default function AssessmentPage() {
             <div className="card text-center py-16">
               <div className="inline-block w-8 h-8 border-2 border-gray-200 border-t-uob-navy rounded-full animate-spin mb-4" />
               <p className="text-gray-500 text-sm">Loading assessment questions...</p>
+            </div>
+          ) : loadError ? (
+            <div className="card text-center py-12">
+              <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <p className="text-gray-700 text-sm font-semibold mb-1">Unable to load questions</p>
+              <p className="text-gray-400 text-xs mb-5">The server may be starting up or unavailable. Please try again.</p>
+              <button
+                onClick={loadQuestions}
+                className="btn-primary px-6 py-2 text-sm"
+              >
+                Retry
+              </button>
             </div>
           ) : questions.length === 0 ? (
             <div className="card text-center py-12 text-gray-400 text-sm">No active questions found. Please contact the administrator.</div>
