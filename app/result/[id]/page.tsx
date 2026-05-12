@@ -293,7 +293,7 @@ function VAResultCard({ result, scanning }: { result: VAResult | null; scanning:
       {/* Footer */}
       <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100">
         <p className="text-xs text-gray-400">
-          This is a surface-level scan analysing HTTP response headers only. Contact UOB for a full penetration test and comprehensive vulnerability assessment.
+          This is a surface-level scan analysing HTTP response headers only. Contact us for a full penetration test and comprehensive vulnerability assessment.
         </p>
       </div>
     </div>
