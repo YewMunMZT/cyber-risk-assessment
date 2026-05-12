@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       method: 'HEAD',
       signal: controller.signal,
       redirect: 'follow',
-      headers: { 'User-Agent': 'UOB-SecurityScanner/1.0 (header-check)' },
+      headers: { 'User-Agent': 'SecurityScanner/1.0 (header-check)' },
     })
     if (!originalIsHttps) redirectedToHttps = true
   } catch (err) {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
           method: 'HEAD',
           signal: controller.signal,
           redirect: 'follow',
-          headers: { 'User-Agent': 'UOB-SecurityScanner/1.0 (header-check)' },
+          headers: { 'User-Agent': 'SecurityScanner/1.0 (header-check)' },
         })
       } catch (err2) {
         const e2 = err2 as Error
