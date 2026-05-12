@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 
+/* ─── Types ──────────────────────────────────────────────────────── */
 interface Answer {
   id: number
   questionTextSnapshot: string
@@ -36,13 +37,26 @@ interface Submission {
   answers: Answer[]
 }
 
-/* ─── SVG Icons ─────────────────────────────────────────────────── */
+interface VACheck { pass: boolean; label: string; detail: string }
+interface VAResult {
+  reachable: boolean
+  url?: string
+  isHttps?: boolean
+  responseTimeMs?: number
+  checks?: Record<string, VACheck>
+  score?: number
+  maxScore?: number
+  grade?: string
+  error?: string
+}
+
+/* ─── SVG Icons ──────────────────────────────────────────────────── */
 const ShieldCheckIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
   </svg>
 )
-const MailIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
+const MailIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
   </svg>
@@ -98,8 +112,36 @@ const XCircleIcon = ({ className = 'w-12 h-12' }: { className?: string }) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 )
+const ScanIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
+    <rect x="7" y="7" width="10" height="10" rx="1" />
+  </svg>
+)
+const PassIcon = ({ className = 'w-3 h-3' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+  </svg>
+)
+const FailIcon = ({ className = 'w-3 h-3' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+)
+const GlobeIcon = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+  </svg>
+)
+const AlertTriangleIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+  </svg>
+)
 
-/* ─── Risk / Category config ────────────────────────────────────── */
+/* ─── Config maps ────────────────────────────────────────────────── */
 const RISK_CONFIG: Record<string, { bg: string; text: string; border: string; badge: string; barColor: string }> = {
   Low:          { bg: 'bg-green-600',  text: 'text-green-700',  border: 'border-green-400',  badge: 'bg-green-100 text-green-800',  barColor: '#16a34a' },
   Moderate:     { bg: 'bg-amber-500',  text: 'text-amber-700',  border: 'border-amber-400',  badge: 'bg-amber-100 text-amber-800',  barColor: '#d97706' },
@@ -109,15 +151,37 @@ const RISK_CONFIG: Record<string, { bg: string; text: string; border: string; ba
 }
 
 const CAT_CONFIG = {
-  People:     { Icon: UsersIcon,  color: 'text-uob-navy' },
-  Process:    { Icon: CogIcon,    color: 'text-uob-navy' },
+  People:     { Icon: UsersIcon,   color: 'text-uob-navy' },
+  Process:    { Icon: CogIcon,     color: 'text-uob-navy' },
   Technology: { Icon: MonitorIcon, color: 'text-uob-navy' },
 }
+
+const VA_CHECK_ORDER = [
+  'https', 'hsts', 'xFrameOptions', 'csp',
+  'xContentTypeOptions', 'referrerPolicy', 'permissionsPolicy', 'serverHeader',
+]
 
 function getRiskConfig(level: string) {
   return RISK_CONFIG[level] || RISK_CONFIG.Unclassified
 }
 
+function gradeColor(g: string) {
+  return g === 'A' ? 'bg-green-600'
+       : g === 'B' ? 'bg-blue-600'
+       : g === 'C' ? 'bg-amber-500'
+       : g === 'D' ? 'bg-orange-600'
+       : 'bg-red-600'
+}
+
+function gradeLabel(g: string) {
+  return g === 'A' ? 'Excellent'
+       : g === 'B' ? 'Good'
+       : g === 'C' ? 'Fair'
+       : g === 'D' ? 'Poor'
+       : 'Critical'
+}
+
+/* ─── Sub-components ─────────────────────────────────────────────── */
 function ScoreBar({ score, max = 10, color }: { score: number; max?: number; color: string }) {
   const pct = Math.min(100, (score / max) * 100)
   return (
@@ -127,13 +191,128 @@ function ScoreBar({ score, max = 10, color }: { score: number; max?: number; col
   )
 }
 
+function VAResultCard({ result, scanning }: { result: VAResult | null; scanning: boolean }) {
+  if (scanning) {
+    return (
+      <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 text-xs text-blue-700" style={{ borderRadius: 2 }}>
+        <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin flex-shrink-0" />
+        Running lightweight vulnerability scan on the submitted website...
+      </div>
+    )
+  }
+
+  if (!result) return null
+
+  if (!result.reachable) {
+    return (
+      <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border border-amber-300 text-xs text-amber-800" style={{ borderRadius: 2 }}>
+        <AlertTriangleIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+        <div>
+          <span className="font-semibold">Website scan unavailable — </span>
+          {result.error || 'The website could not be reached for scanning.'}
+        </div>
+      </div>
+    )
+  }
+
+  const grade   = result.grade ?? 'F'
+  const passed  = result.score ?? 0
+  const total   = result.maxScore ?? 0
+  const checks  = result.checks ?? {}
+
+  return (
+    <div className="border border-uob-border bg-white overflow-hidden" style={{ borderRadius: 2 }}>
+
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-uob-navy">
+        <div className="flex items-center gap-2 text-white">
+          <ScanIcon className="w-3.5 h-3.5" />
+          <span className="text-xs font-semibold tracking-wide">Website Vulnerability Assessment</span>
+          <span className="text-blue-300 text-xs hidden md:inline truncate max-w-xs">— {result.url}</span>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {result.responseTimeMs !== undefined && (
+            <span className="text-blue-300 text-xs">{result.responseTimeMs}ms</span>
+          )}
+          {result.isHttps && (
+            <span className="flex items-center gap-1 text-xs text-green-300 font-medium">
+              <GlobeIcon /> HTTPS
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Grade row */}
+      <div className="flex items-center gap-4 px-4 py-3 border-b border-uob-border">
+        <div className={`w-14 h-14 flex flex-col items-center justify-center text-white flex-shrink-0 ${gradeColor(grade)}`} style={{ borderRadius: 2 }}>
+          <span className="text-2xl font-black leading-none">{grade}</span>
+          <span className="text-xs font-medium opacity-80 mt-0.5">{gradeLabel(grade)}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs font-semibold text-gray-700">Security Header Score</span>
+            <span className="text-xs font-bold text-gray-900">{passed} / {total} passed</span>
+          </div>
+          <div className="w-full bg-gray-100 h-2" style={{ borderRadius: 2 }}>
+            <div
+              className={`h-2 transition-all duration-700 ${gradeColor(grade)}`}
+              style={{ width: `${Math.round((passed / total) * 100)}%`, borderRadius: 2 }}
+            />
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            Surface-level scan of publicly visible HTTP response headers
+          </p>
+        </div>
+      </div>
+
+      {/* Check grid — 2 columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-2">
+        {VA_CHECK_ORDER.map((key, i) => {
+          const check = checks[key]
+          if (!check) return null
+          const isBottomRow = i >= VA_CHECK_ORDER.length - 2
+          return (
+            <div
+              key={key}
+              className={`flex items-start gap-2.5 px-4 py-2.5 text-xs border-b border-gray-100 ${isBottomRow ? 'sm:border-b-0' : ''} ${i === VA_CHECK_ORDER.length - 1 ? 'border-b-0' : ''}`}
+            >
+              <span className={`flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full mt-0.5 ${check.pass ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                {check.pass ? <PassIcon /> : <FailIcon />}
+              </span>
+              <div className="min-w-0">
+                <div className={`font-semibold truncate ${check.pass ? 'text-gray-800' : 'text-gray-700'}`}>
+                  {check.label}
+                </div>
+                <div className="text-gray-500 leading-relaxed mt-0.5">{check.detail}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100">
+        <p className="text-xs text-gray-400">
+          This is a surface-level scan analysing HTTP response headers only. Contact UOB for a full penetration test and comprehensive vulnerability assessment.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Main Page ──────────────────────────────────────────────────── */
 export default function ResultPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const [submission, setSubmission] = useState<Submission | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState('')
 
+  // VA scan state
+  const [vaResult, setVaResult]   = useState<VAResult | null>(null)
+  const [vaScanning, setVaScanning] = useState(false)
+
+  // Load submission
   useEffect(() => {
     fetch(`/api/submissions/${id}`)
       .then((r) => { if (!r.ok) throw new Error('Not found'); return r.json() })
@@ -141,6 +320,23 @@ export default function ResultPage() {
       .catch(() => { setError('Report not found or has been removed.'); setLoading(false) })
   }, [id])
 
+  // Auto-run VA scan once submission loads and has a website
+  useEffect(() => {
+    if (!submission?.website) return
+    setVaScanning(true)
+    setVaResult(null)
+    fetch('/api/va-check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: submission.website }),
+    })
+      .then((r) => r.json())
+      .then((data: VAResult) => { setVaResult(data) })
+      .catch(() => { setVaResult({ reachable: false, error: 'Scan failed — unable to reach the website.' }) })
+      .finally(() => setVaScanning(false))
+  }, [submission?.website])
+
+  /* ── Loading / error states ──────────────────────────────────── */
   if (loading) {
     return (
       <div className="min-h-screen bg-uob-light flex items-center justify-center">
@@ -165,7 +361,7 @@ export default function ResultPage() {
     )
   }
 
-  const risk = getRiskConfig(submission.overallRiskLevel)
+  const risk        = getRiskConfig(submission.overallRiskLevel)
   const submittedAt = format(new Date(submission.submittedAt), 'dd MMM yyyy, HH:mm')
 
   const answersByCategory = submission.answers.reduce<Record<string, Answer[]>>((acc, a) => {
@@ -178,7 +374,7 @@ export default function ResultPage() {
   return (
     <div className="min-h-screen bg-uob-light">
 
-      {/* ── White Top Navigation ─────────────────────────────────── */}
+      {/* ── White top nav ─────────────────────────────────────────── */}
       <nav className="bg-white border-b border-uob-border sticky top-0 z-40 print:static">
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -187,10 +383,7 @@ export default function ResultPage() {
             <span className="text-gray-600 text-sm font-medium">Cyber Risk Assessment</span>
           </div>
           <div className="flex items-center gap-2 print:hidden">
-            <button
-              onClick={() => window.print()}
-              className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5"
-            >
+            <button onClick={() => window.print()} className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5">
               <PrinterIcon className="w-3.5 h-3.5" /> Print
             </button>
             <button onClick={() => router.push('/')} className="btn-primary py-1.5 px-3 text-xs">
@@ -200,17 +393,15 @@ export default function ResultPage() {
         </div>
       </nav>
 
-      {/* ── Navy Hero Header ─────────────────────────────────────── */}
+      {/* ── Navy hero ─────────────────────────────────────────────── */}
       <header style={{ backgroundColor: '#003DA5' }} className="print:hidden">
-        <div className="max-w-5xl mx-auto px-5 py-8">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-9 h-9 bg-white/10 flex items-center justify-center">
-              <ShieldCheckIcon className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-white font-bold text-lg leading-tight">Cybersecurity Risk Assessment Report</h1>
-              <p className="text-blue-200 text-xs font-mono mt-0.5">Ref: {submission.reportReferenceNo}</p>
-            </div>
+        <div className="max-w-5xl mx-auto px-5 py-8 flex items-center gap-3">
+          <div className="w-9 h-9 bg-white/10 flex items-center justify-center flex-shrink-0">
+            <ShieldCheckIcon className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-white font-bold text-lg leading-tight">Cybersecurity Risk Assessment Report</h1>
+            <p className="text-blue-200 text-xs font-mono mt-0.5">Ref: {submission.reportReferenceNo}</p>
           </div>
         </div>
       </header>
@@ -223,7 +414,7 @@ export default function ResultPage() {
           <span>A copy of this report has been sent to <strong>{submission.contactEmail}</strong></span>
         </div>
 
-        {/* Risk Score Banner */}
+        {/* Risk score banner */}
         <div className={`${risk.bg} text-white overflow-hidden`}>
           <div className="px-8 py-10 text-center">
             <div className="text-xs font-semibold uppercase tracking-widest opacity-80 mb-1">Overall Risk Score</div>
@@ -236,10 +427,8 @@ export default function ResultPage() {
           <div className="h-1 bg-black/20" />
         </div>
 
-        {/* Score Breakdown + Recommendation */}
+        {/* Score breakdown + Recommendation */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-          {/* Breakdown */}
           <div className="card">
             <h2 className="text-sm font-bold text-uob-dark mb-4 pb-3 border-b border-gray-100 flex items-center gap-2">
               <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
@@ -248,13 +437,11 @@ export default function ResultPage() {
               Risk Score Breakdown
             </h2>
             <div className="space-y-5">
-              {(
-                [
-                  { label: 'People',     raw: submission.peopleRawScore,     weighted: submission.peopleWeightedScore,     weight: '20%' },
-                  { label: 'Process',    raw: submission.processRawScore,    weighted: submission.processWeightedScore,    weight: '40%' },
-                  { label: 'Technology', raw: submission.technologyRawScore, weighted: submission.technologyWeightedScore, weight: '40%' },
-                ] as const
-              ).map((cat) => {
+              {([
+                { label: 'People',     raw: submission.peopleRawScore,     weighted: submission.peopleWeightedScore,     weight: '20%' },
+                { label: 'Process',    raw: submission.processRawScore,    weighted: submission.processWeightedScore,    weight: '40%' },
+                { label: 'Technology', raw: submission.technologyRawScore, weighted: submission.technologyWeightedScore, weight: '40%' },
+              ] as const).map((cat) => {
                 const cfg = CAT_CONFIG[cat.label as keyof typeof CAT_CONFIG]
                 return (
                   <div key={cat.label}>
@@ -281,7 +468,6 @@ export default function ResultPage() {
             </div>
           </div>
 
-          {/* Recommendation */}
           <div className={`card border-l-4 ${risk.border}`}>
             <h2 className="text-sm font-bold text-uob-dark mb-3 pb-3 border-b border-gray-100 flex items-center gap-2">
               <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
@@ -297,7 +483,25 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* Company Details */}
+        {/* Website VA Section — only shown if website was provided */}
+        {submission.website && (
+          <div className="card p-0 overflow-hidden">
+            <div className="px-5 py-3 border-b border-uob-border flex items-center gap-2 bg-white">
+              <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
+                <ScanIcon className="w-3.5 h-3.5 text-white" />
+              </span>
+              <div>
+                <h2 className="text-sm font-bold text-uob-dark">Website Vulnerability Assessment</h2>
+                <p className="text-xs text-gray-400">{submission.website}</p>
+              </div>
+            </div>
+            <div className="p-4">
+              <VAResultCard result={vaResult} scanning={vaScanning} />
+            </div>
+          </div>
+        )}
+
+        {/* Company details */}
         <div className="card">
           <h2 className="text-sm font-bold text-uob-dark mb-4 pb-3 border-b border-gray-100 flex items-center gap-2">
             <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
@@ -324,7 +528,7 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {/* Assessment Answers */}
+        {/* Assessment responses */}
         <div className="card">
           <h2 className="text-sm font-bold text-uob-dark mb-5 pb-3 border-b border-gray-100 flex items-center gap-2">
             <span className="w-6 h-6 bg-uob-navy flex items-center justify-center flex-shrink-0">
