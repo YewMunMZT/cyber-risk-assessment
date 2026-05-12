@@ -487,9 +487,22 @@ export default function AssessmentPage() {
                   {errors.contactEmail && <p className="mt-1.5 text-xs text-uob-red flex items-center gap-1"><AlertIcon />{errors.contactEmail}</p>}
                 </div>
 
+                <div data-error={!!errors.estimatedEndpoints}>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
+                    Estimated No. of Endpoints <span className="text-uob-red normal-case font-normal">*</span>
+                  </label>
+                  <input type="number" min="1" className={`input-field ${errors.estimatedEndpoints ? 'border-uob-red ring-1 ring-uob-red' : ''}`}
+                    placeholder="e.g. 250"
+                    value={form.estimatedEndpoints} onChange={(e) => updateForm('estimatedEndpoints', e.target.value)} />
+                  {errors.estimatedEndpoints && <p className="mt-1.5 text-xs text-uob-red flex items-center gap-1"><AlertIcon />{errors.estimatedEndpoints}</p>}
+                  <p className="mt-1 text-xs text-gray-400">Laptops, desktops, servers, mobile devices</p>
+                </div>
+
+                {/* Website — full width row, VA scan triggers on blur */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
-                    Website <span className="text-gray-400 normal-case font-normal">(optional — enter to run a lightweight security scan)</span>
+                    Website
+                    <span className="text-gray-400 normal-case font-normal ml-1">(optional — tab away to run a lightweight security scan)</span>
                   </label>
                   <div className="relative">
                     <input
@@ -507,14 +520,15 @@ export default function AssessmentPage() {
                     )}
                   </div>
 
-                  {/* VA Result Card */}
+                  {/* Scanning banner */}
                   {vaLoading && (
                     <div className="mt-2 px-4 py-3 bg-blue-50 border border-blue-200 text-xs text-blue-700 flex items-center gap-2" style={{ borderRadius: 2 }}>
                       <div className="w-3.5 h-3.5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin flex-shrink-0" />
-                      Running lightweight security scan on {form.website || 'website'}...
+                      Running lightweight security scan on {form.website}...
                     </div>
                   )}
 
+                  {/* Error state */}
                   {!vaLoading && vaResult && !vaResult.reachable && (
                     <div className="mt-2 px-4 py-3 bg-amber-50 border border-amber-300 text-xs text-amber-800 flex items-start gap-2" style={{ borderRadius: 2 }}>
                       <AlertIcon />
@@ -522,20 +536,10 @@ export default function AssessmentPage() {
                     </div>
                   )}
 
+                  {/* Success result card */}
                   {!vaLoading && vaResult?.reachable && vaResult.checks && (
                     <VAResultCard result={vaResult} />
                   )}
-                </div>
-
-                <div data-error={!!errors.estimatedEndpoints}>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
-                    Estimated No. of Endpoints <span className="text-uob-red normal-case font-normal">*</span>
-                  </label>
-                  <input type="number" min="1" className={`input-field ${errors.estimatedEndpoints ? 'border-uob-red ring-1 ring-uob-red' : ''}`}
-                    placeholder="e.g. 250"
-                    value={form.estimatedEndpoints} onChange={(e) => updateForm('estimatedEndpoints', e.target.value)} />
-                  {errors.estimatedEndpoints && <p className="mt-1.5 text-xs text-uob-red flex items-center gap-1"><AlertIcon />{errors.estimatedEndpoints}</p>}
-                  <p className="mt-1 text-xs text-gray-400">Laptops, desktops, servers, mobile devices</p>
                 </div>
 
               </div>
