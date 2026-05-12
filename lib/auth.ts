@@ -34,7 +34,8 @@ export async function getAdminFromRequest(request: NextRequest) {
 }
 
 export function buildAuthCookieHeader(token: string): string {
-  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  const isHttps = (process.env.NEXT_PUBLIC_APP_URL || '').startsWith('https')
+  const secure = isHttps ? '; Secure' : ''
   return `${COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}; Path=/${secure}`
 }
 
