@@ -377,10 +377,13 @@ export default function ResultPage() {
       {/* ── White top nav ─────────────────────────────────────────── */}
       <nav className="bg-white border-b border-uob-border sticky top-0 z-40 print:static">
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-uob-red font-black text-2xl tracking-tight leading-none select-none">UOB</span>
-            <div className="w-px h-5 bg-gray-300" />
-            <span className="text-gray-600 text-sm font-medium">Cyber Risk Assessment</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-uob-navy flex items-center justify-center flex-shrink-0" style={{ borderRadius: 2 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <span className="text-gray-700 text-sm font-semibold">Cybersecurity Risk Assessment</span>
           </div>
           <div className="flex items-center gap-2 print:hidden">
             <button onClick={() => window.print()} className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5">
@@ -577,8 +580,12 @@ export default function ResultPage() {
       <footer className="bg-uob-dark mt-4 print:hidden">
         <div className="max-w-5xl mx-auto px-5 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-uob-red font-black text-lg">UOB</span>
-            <span className="text-gray-500 text-xs">Cyber Risk Assessment</span>
+            <div className="w-5 h-5 bg-uob-navy flex items-center justify-center" style={{ borderRadius: 2 }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <span className="text-gray-500 text-xs">Cybersecurity Risk Assessment</span>
           </div>
           <p className="text-gray-600 text-xs font-mono">Ref: {submission.reportReferenceNo}</p>
         </div>
