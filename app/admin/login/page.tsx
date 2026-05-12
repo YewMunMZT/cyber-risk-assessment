@@ -39,20 +39,23 @@ export default function AdminLoginPage() {
 
       <div className="w-full max-w-md">
 
-        {/* UOB Branding */}
+        {/* Branding */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center gap-3 mb-5">
-            <div className="text-uob-red font-black text-5xl tracking-tight leading-none">UOB</div>
+          <div className="inline-flex items-center justify-center mb-5">
+            <div className="w-16 h-16 bg-uob-navy flex items-center justify-center" style={{ borderRadius: 4 }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
           </div>
-          <div className="w-16 h-0.5 bg-uob-red mx-auto mb-4" />
+          <div className="w-16 h-0.5 bg-uob-navy/40 mx-auto mb-4" />
           <h2 className="text-white font-semibold text-lg">Cyber Risk Assessment</h2>
           <p className="text-gray-500 text-sm mt-1">Administrator Portal</p>
         </div>
 
         {/* Login Card */}
         <div className="bg-white rounded shadow-2xl overflow-hidden">
-          {/* Card top accent */}
-          <div className="h-1 bg-uob-red" />
+          <div className="h-1 bg-uob-navy" />
 
           <div className="p-8">
             <h3 className="text-xl font-bold text-uob-dark mb-1">Sign In</h3>
