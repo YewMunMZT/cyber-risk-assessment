@@ -1,23 +1,42 @@
-import type { Metadata } from 'next'
-import './globals.css'
+import type { Config } from 'tailwindcss'
 
-export const metadata: Metadata = {
-  title: 'Cybersecurity Risk Assessment',
-  description: 'Assess your organisation\'s cybersecurity risk posture with our comprehensive questionnaire.',
+const config: Config = {
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  safelist: [
+    { pattern: /bg-uob-/ },
+    { pattern: /text-uob-/ },
+    { pattern: /border-uob-/ },
+    { pattern: /ring-uob-/ },
+  ],
+  theme: {
+    extend: {
+      colors: {
+        uob: {
+          navy:        '#003DA5',
+          'navy-dark': '#002780',
+          'navy-light':'#0050CC',
+          red:         '#CC0000',
+          'red-dark':  '#A80000',
+          dark:        '#1A1A1A',
+          'gray-text': '#6B7280',
+          light:       '#F5F7FA',
+          border:      '#E5E7EB',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'Arial', 'Helvetica Neue', 'sans-serif'],
+      },
+      boxShadow: {
+        'card': '0 1px 4px 0 rgba(0,0,0,0.08)',
+        'nav':  '0 1px 0 0 #E5E7EB',
+      },
+    },
+  },
+  plugins: [],
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>{children}</body>
-    </html>
-  )
-}
+export default config
