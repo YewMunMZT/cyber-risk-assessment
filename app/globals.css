@@ -23,7 +23,7 @@
 }
 
 @layer components {
-  /* UOB Navy primary button */
+  /* Primary button (navy) */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3
            bg-uob-navy text-white text-sm font-semibold tracking-wide
