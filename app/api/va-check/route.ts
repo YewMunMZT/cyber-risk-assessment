@@ -1,28 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export interface VAResult {
-  reachable: boolean
-  url?: string
-  isHttps?: boolean
-  redirectedToHttps?: boolean
-  responseTimeMs?: number
-  statusCode?: number
-  checks?: {
-    https:              { pass: boolean; label: string; detail: string }
-    hsts:               { pass: boolean; label: string; detail: string }
-    xFrameOptions:      { pass: boolean; label: string; detail: string }
-    csp:                { pass: boolean; label: string; detail: string }
-    xContentTypeOptions:{ pass: boolean; label: string; detail: string }
-    referrerPolicy:     { pass: boolean; label: string; detail: string }
-    permissionsPolicy:  { pass: boolean; label: string; detail: string }
-    serverHeader:       { pass: boolean; label: string; detail: string }
-  }
-  score?: number
-  maxScore?: number
-  grade?: string
-  error?: string
-}
-
 function normaliseUrl(raw: string): URL | null {
   try {
     const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
@@ -32,7 +9,7 @@ function normaliseUrl(raw: string): URL | null {
   }
 }
 
-function grade(score: number, max: number): string {
+function scoreToGrade(score: number, max: number): string {
   const pct = score / max
   if (pct >= 0.875) return 'A'
   if (pct >= 0.75)  return 'B'
@@ -42,81 +19,109 @@ function grade(score: number, max: number): string {
 }
 
 export async function POST(request: NextRequest) {
+  // ── Parse body ────────────────────────────────────────────────────
   let body: { url?: string }
-  try { body = await request.json() } catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }) }
+  try { body = await request.json() } catch {
+    return NextResponse.json({ reachable: false, error: 'Invalid request body' }, { status: 400 })
+  }
 
   const raw = (body.url || '').trim()
-  if (!raw) return NextResponse.json({ error: 'URL is required' }, { status: 400 })
+  if (!raw) {
+    return NextResponse.json({ reachable: false, error: 'URL is required' }, { status: 400 })
+  }
 
-  // ── 1. Parse URL ──────────────────────────────────────────────────
+  // ── Validate URL ──────────────────────────────────────────────────
   const parsed = normaliseUrl(raw)
-  if (!parsed) return NextResponse.json({ reachable: false, error: 'Invalid URL format — please include a valid domain (e.g. https://example.com)' })
+  if (!parsed) {
+    return NextResponse.json({
+      reachable: false,
+      error: 'Invalid URL format — please include a valid domain (e.g. https://example.com)',
+    })
+  }
 
-  const isHttps = parsed.protocol === 'https:'
+  const originalIsHttps = parsed.protocol === 'https:'
 
-  // ── 2. Attempt HEAD request with timeout ─────────────────────────
+  // ── Fetch with timeout ────────────────────────────────────────────
   const controller = new AbortController()
   const timeoutId  = setTimeout(() => controller.abort(), 8000)
-  const start      = Date.now()
+  const startMs    = Date.now()
 
   let res: Response | null = null
   let fetchError = ''
   let redirectedToHttps = false
 
   try {
-    // Try HTTPS first; if original URL was http, also check redirect
-    const targetUrl = isHttps ? parsed.href : `https://${parsed.host}${parsed.pathname}${parsed.search}`
-
-    res = await fetch(targetUrl, {
+    // Always try HTTPS version to detect automatic redirect
+    const httpsUrl = `https://${parsed.host}${parsed.pathname}${parsed.search}`
+    res = await fetch(httpsUrl, {
       method: 'HEAD',
       signal: controller.signal,
       redirect: 'follow',
-      headers: { 'User-Agent': 'UOB-Security-Scanner/1.0' },
+      headers: { 'User-Agent': 'UOB-SecurityScanner/1.0 (header-check)' },
     })
-
-    // If original was HTTP and HTTPS succeeded, flag redirect
-    if (!isHttps) redirectedToHttps = res.ok || res.status < 500
+    if (!originalIsHttps) redirectedToHttps = true
   } catch (err) {
     const e = err as Error
-    fetchError = e.name === 'AbortError'
-      ? 'Request timed out — the site may be slow or blocking automated scans'
-      : 'Unable to reach the website — check that the URL is publicly accessible'
+    // If HTTPS failed and original was HTTP, try HTTP
+    if (!originalIsHttps) {
+      try {
+        res = await fetch(parsed.href, {
+          method: 'HEAD',
+          signal: controller.signal,
+          redirect: 'follow',
+          headers: { 'User-Agent': 'UOB-SecurityScanner/1.0 (header-check)' },
+        })
+      } catch (err2) {
+        const e2 = err2 as Error
+        fetchError = e2.name === 'AbortError'
+          ? 'Request timed out — the site may be slow or blocking automated scans'
+          : 'Unable to reach the website — check that the URL is publicly accessible'
+      }
+    } else {
+      fetchError = e.name === 'AbortError'
+        ? 'Request timed out — the site may be slow or blocking automated scans'
+        : 'Unable to reach the website — check that the URL is publicly accessible'
+    }
   } finally {
     clearTimeout(timeoutId)
   }
 
   if (!res && fetchError) {
-    return NextResponse.json({ reachable: false, error: fetchError } satisfies VAResult)
+    return NextResponse.json({ reachable: false, error: fetchError })
+  }
+  if (!res) {
+    return NextResponse.json({ reachable: false, error: 'Unexpected error reaching the website' })
   }
 
-  const responseTimeMs = Date.now() - start
-  const h = res!.headers
+  const responseTimeMs = Date.now() - startMs
+  const h = res.headers
+  const isHttps = originalIsHttps || redirectedToHttps
 
-  // ── 3. Evaluate security headers ─────────────────────────────────
-  const hstsVal        = h.get('strict-transport-security')
-  const xfoVal         = h.get('x-frame-options')
-  const cspVal         = h.get('content-security-policy')
-  const xctoVal        = h.get('x-content-type-options')
-  const rpVal          = h.get('referrer-policy')
-  const ppVal          = h.get('permissions-policy') ?? h.get('feature-policy')
-  const serverVal      = h.get('server')
-  const xPoweredByVal  = h.get('x-powered-by')
+  // ── Security header checks ────────────────────────────────────────
+  const hstsVal   = h.get('strict-transport-security')
+  const xfoVal    = h.get('x-frame-options')
+  const cspVal    = h.get('content-security-policy')
+  const xctoVal   = h.get('x-content-type-options')
+  const rpVal     = h.get('referrer-policy')
+  const ppVal     = h.get('permissions-policy') || h.get('feature-policy')
+  const srvVal    = h.get('server')
+  const xpbVal    = h.get('x-powered-by')
 
-  const checks: VAResult['checks'] = {
+  const checks = {
     https: {
-      pass: isHttps || redirectedToHttps,
+      pass: isHttps,
       label: 'HTTPS',
       detail: isHttps
-        ? 'Site uses HTTPS — data in transit is encrypted'
-        : redirectedToHttps
-          ? 'HTTP redirects to HTTPS — encryption enforced'
-          : 'Site does not use HTTPS — data transmitted in plaintext',
+        ? originalIsHttps
+          ? 'Site uses HTTPS — data in transit is encrypted'
+          : 'HTTP redirects to HTTPS — encryption is enforced'
+        : 'Site does not use HTTPS — data is transmitted in plaintext',
     },
     hsts: {
       pass: !!hstsVal,
       label: 'HSTS',
       detail: hstsVal
-        ? `Strict-Transport-Security enforced (max-age detected)`
+        ? 'Strict-Transport-Security is enforced — browsers will always use HTTPS'
         : 'Missing Strict-Transport-Security header — browsers may allow HTTP fallback',
     },
     xFrameOptions: {
@@ -124,42 +129,42 @@ export async function POST(request: NextRequest) {
       label: 'Clickjacking Protection',
       detail: xfoVal
         ? `X-Frame-Options: ${xfoVal}`
-        : 'Missing X-Frame-Options — site may be vulnerable to clickjacking',
+        : 'Missing X-Frame-Options — page may be embeddable in malicious iframes',
     },
     csp: {
       pass: !!cspVal,
       label: 'Content Security Policy',
       detail: cspVal
         ? 'Content-Security-Policy header is present'
-        : 'Missing Content-Security-Policy — increased XSS exposure risk',
+        : 'Missing Content-Security-Policy — increased risk of cross-site scripting (XSS)',
     },
     xContentTypeOptions: {
       pass: xctoVal?.toLowerCase() === 'nosniff',
       label: 'MIME Sniffing Protection',
       detail: xctoVal
         ? `X-Content-Type-Options: ${xctoVal}`
-        : 'Missing X-Content-Type-Options: nosniff — browser MIME sniffing enabled',
+        : 'Missing X-Content-Type-Options: nosniff — MIME sniffing attacks are possible',
     },
     referrerPolicy: {
       pass: !!rpVal,
       label: 'Referrer Policy',
       detail: rpVal
         ? `Referrer-Policy: ${rpVal}`
-        : 'Missing Referrer-Policy — full URL may leak in referrer headers',
+        : 'Missing Referrer-Policy — full URL may leak to third-party sites via referrer headers',
     },
     permissionsPolicy: {
       pass: !!ppVal,
       label: 'Permissions Policy',
       detail: ppVal
-        ? 'Permissions-Policy header restricts browser feature access'
-        : 'Missing Permissions-Policy — browser APIs (camera, mic, etc.) not explicitly restricted',
+        ? 'Permissions-Policy restricts browser feature access (camera, mic, geolocation)'
+        : 'Missing Permissions-Policy — browser APIs are not explicitly restricted',
     },
     serverHeader: {
-      pass: !serverVal && !xPoweredByVal,
+      pass: !srvVal && !xpbVal,
       label: 'Server Info Disclosure',
-      detail: serverVal || xPoweredByVal
-        ? `Server version exposed: ${[serverVal, xPoweredByVal].filter(Boolean).join(' / ')} — reveals tech stack to attackers`
-        : 'Server/X-Powered-By headers suppressed — no technology stack exposure',
+      detail: srvVal || xpbVal
+        ? `Technology stack exposed: ${[srvVal, xpbVal].filter(Boolean).join(' / ')} — aids attacker reconnaissance`
+        : 'Server and X-Powered-By headers are suppressed — no technology stack exposed',
     },
   }
 
@@ -168,14 +173,14 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     reachable: true,
-    url: res!.url || parsed.href,
-    isHttps: isHttps || redirectedToHttps,
+    url: res.url || parsed.href,
+    isHttps,
     redirectedToHttps,
     responseTimeMs,
-    statusCode: res!.status,
+    statusCode: res.status,
     checks,
     score: passed,
     maxScore,
-    grade: grade(passed, maxScore),
-  } satisfies VAResult)
+    grade: scoreToGrade(passed, maxScore),
+  })
 }
