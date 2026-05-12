@@ -225,7 +225,7 @@ function VAResultCard({ result }: { result: VAResult }) {
       <div className="px-4 py-2.5 bg-gray-50 border-t border-uob-border">
         <p className="text-xs text-gray-400">
           Surface-level scan only — analyses publicly visible HTTP headers.
-          Contact UOB for a comprehensive vulnerability assessment.
+          Contact us for a comprehensive vulnerability assessment.
         </p>
       </div>
     </div>
@@ -568,6 +568,7 @@ export default function AssessmentPage() {
               <p className="text-gray-700 text-sm font-semibold mb-1">Unable to load questions</p>
               <p className="text-gray-400 text-xs mb-5">The server may be starting up or unavailable. Please try again.</p>
               <button
+                type="button"
                 onClick={loadQuestions}
                 className="btn-primary px-6 py-2 text-sm"
               >
