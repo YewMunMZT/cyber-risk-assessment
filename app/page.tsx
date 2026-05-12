@@ -1,7 +1,22 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+
+/* ── VA Result type (mirrors API) ────────────────────────────────── */
+interface VACheck { pass: boolean; label: string; detail: string }
+interface VAResult {
+  reachable: boolean
+  url?: string
+  isHttps?: boolean
+  responseTimeMs?: number
+  statusCode?: number
+  checks?: Record<string, VACheck>
+  score?: number
+  maxScore?: number
+  grade?: string
+  error?: string
+}
 
 interface Choice { text: string; score: number }
 
@@ -87,10 +102,144 @@ const AlertIcon = () => (
   </svg>
 )
 
+const ScanIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" />
+    <rect x="7" y="7" width="10" height="10" rx="1" />
+  </svg>
+)
+
+const PassIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+)
+
+const FailIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+)
+
+const GlobeIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+)
+
 const CAT_ICONS = {
   People:     <UsersIcon />,
   Process:    <SettingsIcon />,
   Technology: <MonitorIcon />,
+}
+
+/* ── Grade colour helper ─────────────────────────────────────────── */
+function gradeColor(g: string) {
+  return g === 'A' ? { bg: 'bg-green-600',  text: 'text-white' }
+       : g === 'B' ? { bg: 'bg-blue-600',   text: 'text-white' }
+       : g === 'C' ? { bg: 'bg-amber-500',  text: 'text-white' }
+       : g === 'D' ? { bg: 'bg-orange-600', text: 'text-white' }
+       :             { bg: 'bg-red-600',     text: 'text-white' }
+}
+
+/* ── VA Result display card ──────────────────────────────────────── */
+function VAResultCard({ result }: { result: VAResult }) {
+  const grade = result.grade ?? 'F'
+  const gc    = gradeColor(grade)
+  const checks = result.checks ?? {}
+  const passed = result.score ?? 0
+  const total  = result.maxScore ?? 0
+
+  // Define display order
+  const ORDER = [
+    'https', 'hsts', 'xFrameOptions', 'csp',
+    'xContentTypeOptions', 'referrerPolicy', 'permissionsPolicy', 'serverHeader',
+  ]
+
+  return (
+    <div className="mt-2 border border-uob-border bg-white overflow-hidden" style={{ borderRadius: 2 }}>
+
+      {/* Header bar */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-uob-navy">
+        <div className="flex items-center gap-2 text-white">
+          <ScanIcon />
+          <span className="text-xs font-semibold tracking-wide">Lightweight Security Scan</span>
+          <span className="text-blue-300 text-xs hidden sm:inline">— {result.url}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          {result.responseTimeMs !== undefined && (
+            <span className="text-blue-300 text-xs">{result.responseTimeMs}ms</span>
+          )}
+          {result.isHttps && (
+            <span className="flex items-center gap-1 text-xs text-green-300">
+              <GlobeIcon /> HTTPS
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Grade + summary */}
+      <div className="flex items-center gap-4 px-4 py-3 border-b border-uob-border">
+        <div className={`w-12 h-12 flex items-center justify-center text-2xl font-black flex-shrink-0 ${gc.bg} ${gc.text}`} style={{ borderRadius: 2 }}>
+          {grade}
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-semibold text-gray-700">Security Header Score</span>
+            <span className="text-xs font-bold text-gray-900">{passed} / {total} checks passed</span>
+          </div>
+          <div className="w-full bg-gray-100 h-1.5" style={{ borderRadius: 2 }}>
+            <div
+              className={`h-1.5 transition-all duration-700 ${
+                grade === 'A' ? 'bg-green-500' : grade === 'B' ? 'bg-blue-500' :
+                grade === 'C' ? 'bg-amber-500' : grade === 'D' ? 'bg-orange-500' : 'bg-red-500'
+              }`}
+              style={{ width: `${(passed / total) * 100}%`, borderRadius: 2 }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Check grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x-0">
+        {ORDER.map((key, i) => {
+          const check = checks[key]
+          if (!check) return null
+          const isLast = i === ORDER.length - 1
+          const isSecondLast = i === ORDER.length - 2
+          return (
+            <div
+              key={key}
+              className={`flex items-start gap-2.5 px-4 py-2.5 text-xs border-b border-uob-border/60 ${
+                // Remove bottom border on last row (last 2 items on sm+)
+                isLast || (ORDER.length % 2 === 0 && isSecondLast) ? 'sm:border-b-0' : ''
+              } ${isLast ? 'border-b-0' : ''}`}
+            >
+              <span className={`flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full mt-0.5 ${check.pass ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                {check.pass ? <PassIcon /> : <FailIcon />}
+              </span>
+              <div>
+                <div className={`font-semibold ${check.pass ? 'text-gray-800' : 'text-gray-700'}`}>
+                  {check.label}
+                </div>
+                <div className="text-gray-500 leading-relaxed mt-0.5">{check.detail}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Disclaimer */}
+      <div className="px-4 py-2.5 bg-gray-50 border-t border-uob-border">
+        <p className="text-xs text-gray-400">
+          Surface-level scan only — analyses publicly visible HTTP headers.
+          Contact UOB for a comprehensive vulnerability assessment.
+        </p>
+      </div>
+    </div>
+  )
 }
 
 export default function AssessmentPage() {
@@ -108,6 +257,47 @@ export default function AssessmentPage() {
   })
 
   const [answers, setAnswers] = useState<AnswerState>({})
+
+  // ── Website VA scan ───────────────────────────────────────────────
+  const [vaResult, setVaResult]   = useState<VAResult | null>(null)
+  const [vaLoading, setVaLoading] = useState(false)
+  const vaAbort = useRef<AbortController | null>(null)
+
+  const runVAScan = useCallback(async (url: string) => {
+    const trimmed = url.trim()
+    if (!trimmed) { setVaResult(null); return }
+
+    // Basic client-side format check before hitting API
+    const hasScheme = /^https?:\/\//i.test(trimmed)
+    const withScheme = hasScheme ? trimmed : `https://${trimmed}`
+    try { new URL(withScheme) } catch {
+      setVaResult({ reachable: false, error: 'Please enter a valid URL (e.g. https://www.company.com)' })
+      return
+    }
+
+    // Cancel any in-flight request
+    vaAbort.current?.abort()
+    vaAbort.current = new AbortController()
+
+    setVaLoading(true)
+    setVaResult(null)
+    try {
+      const res = await fetch('/api/va-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: trimmed }),
+        signal: vaAbort.current.signal,
+      })
+      const data: VAResult = await res.json()
+      setVaResult(data)
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        setVaResult({ reachable: false, error: 'Scan failed — please check your connection.' })
+      }
+    } finally {
+      setVaLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     fetch('/api/questions?activeOnly=true')
@@ -297,12 +487,44 @@ export default function AssessmentPage() {
                   {errors.contactEmail && <p className="mt-1.5 text-xs text-uob-red flex items-center gap-1"><AlertIcon />{errors.contactEmail}</p>}
                 </div>
 
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
-                    Website <span className="text-gray-400 normal-case font-normal">(optional)</span>
+                    Website <span className="text-gray-400 normal-case font-normal">(optional — enter to run a lightweight security scan)</span>
                   </label>
-                  <input type="url" className="input-field" placeholder="https://www.company.com"
-                    value={form.website} onChange={(e) => updateForm('website', e.target.value)} />
+                  <div className="relative">
+                    <input
+                      type="url"
+                      className={`input-field pr-10 ${vaLoading ? 'border-uob-navy' : ''}`}
+                      placeholder="https://www.company.com"
+                      value={form.website}
+                      onChange={(e) => { updateForm('website', e.target.value); setVaResult(null) }}
+                      onBlur={(e) => runVAScan(e.target.value)}
+                    />
+                    {vaLoading && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-blue-200 border-t-uob-navy rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* VA Result Card */}
+                  {vaLoading && (
+                    <div className="mt-2 px-4 py-3 bg-blue-50 border border-blue-200 text-xs text-blue-700 flex items-center gap-2" style={{ borderRadius: 2 }}>
+                      <div className="w-3.5 h-3.5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin flex-shrink-0" />
+                      Running lightweight security scan on {form.website || 'website'}...
+                    </div>
+                  )}
+
+                  {!vaLoading && vaResult && !vaResult.reachable && (
+                    <div className="mt-2 px-4 py-3 bg-amber-50 border border-amber-300 text-xs text-amber-800 flex items-start gap-2" style={{ borderRadius: 2 }}>
+                      <AlertIcon />
+                      <span>{vaResult.error || 'Unable to scan the website.'}</span>
+                    </div>
+                  )}
+
+                  {!vaLoading && vaResult?.reachable && vaResult.checks && (
+                    <VAResultCard result={vaResult} />
+                  )}
                 </div>
 
                 <div data-error={!!errors.estimatedEndpoints}>
