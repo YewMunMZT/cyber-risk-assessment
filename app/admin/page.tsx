@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 
@@ -80,7 +80,7 @@ function StatCard({
   value,
   sub,
 }: {
-  Icon: ({ className }: { className?: string }) => JSX.Element
+  Icon: ({ className }: { className?: string }) => React.ReactNode
   label: string
   value: string | number
   sub?: string
@@ -107,7 +107,7 @@ function ActionCard({
   sub,
 }: {
   href: string
-  Icon: ({ className }: { className?: string }) => JSX.Element
+  Icon: ({ className }: { className?: string }) => React.ReactNode
   label: string
   sub: string
 }) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import clsx from 'clsx'
@@ -50,7 +50,7 @@ const NAV = [
   { href: '/admin/submissions',     label: 'Submitted Reports',   Icon: DocumentsIcon, exact: false },
 ]
 
-function NavItem({ href, label, Icon, exact }: { href: string; label: string; Icon: () => JSX.Element; exact: boolean }) {
+function NavItem({ href, label, Icon, exact }: { href: string; label: string; Icon: () => React.ReactNode; exact: boolean }) {
   const pathname = usePathname()
   const active = exact ? pathname === href : pathname.startsWith(href)
 
