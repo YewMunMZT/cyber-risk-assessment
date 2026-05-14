@@ -446,9 +446,9 @@ export default function ResultPage() {
       .finally(() => setVaScanning(false))
   }, [submission?.website])
 
-  // Auto-run AI recommendations after VA scan returns a reachable result
+  // Auto-run AI recommendations as soon as submission loads (independent of VA scan)
   useEffect(() => {
-    if (!vaResult?.reachable || !submission?.website || !submission?.companyName) return
+    if (!submission?.website || !submission?.companyName) return
     setAiLoading(true)
     setAiError('')
     setAiRecs(null)
@@ -458,7 +458,7 @@ export default function ResultPage() {
       body: JSON.stringify({
         url: submission.website,
         companyName: submission.companyName,
-        vaResult,
+        vaResult: null, // VA runs in parallel; API will scrape independently
       }),
     })
       .then((r) => r.json())
@@ -468,7 +468,7 @@ export default function ResultPage() {
       })
       .catch(() => setAiError('Could not connect to AI service. Ensure Ollama is running.'))
       .finally(() => setAiLoading(false))
-  }, [vaResult, submission?.website, submission?.companyName])
+  }, [submission?.website, submission?.companyName])
 
   /* ── Loading / error states ──────────────────────────────────── */
   if (loading) {
@@ -638,8 +638,8 @@ export default function ResultPage() {
           </div>
         )}
 
-        {/* AI Recommendations — auto-triggers after VA scan */}
-        {submission.website && (aiLoading || aiRecs || aiError) && (
+        {/* AI Recommendations — auto-triggers when report loads (parallel to VA scan) */}
+        {submission.website && (
           <AIRecommendationsCard
             data={aiRecs}
             loading={aiLoading}
