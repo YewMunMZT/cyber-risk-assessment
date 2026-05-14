@@ -50,6 +50,19 @@ interface VAResult {
   error?: string
 }
 
+interface Recommendation {
+  priority: number
+  title: string
+  category: 'People' | 'Process' | 'Technology' | 'Infrastructure' | 'Compliance'
+  finding: string
+  action: string
+  effort: 'Low' | 'Medium' | 'High'
+}
+interface AIRecommendationsResult {
+  recommendations: Recommendation[]
+  orgContext: { title: string; description: string; industry: string }
+}
+
 /* ─── SVG Icons ──────────────────────────────────────────────────── */
 const ShieldCheckIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -300,6 +313,98 @@ function VAResultCard({ result, scanning }: { result: VAResult | null; scanning:
   )
 }
 
+/* ─── AI Recommendations Card ────────────────────────────────────── */
+const AI_CAT_COLORS: Record<string, string> = {
+  People:         'bg-purple-100 text-purple-800',
+  Process:        'bg-blue-100 text-blue-800',
+  Technology:     'bg-indigo-100 text-indigo-800',
+  Infrastructure: 'bg-cyan-100 text-cyan-800',
+  Compliance:     'bg-amber-100 text-amber-800',
+}
+const AI_EFFORT_COLORS: Record<string, string> = {
+  Low:    'bg-green-100 text-green-800',
+  Medium: 'bg-amber-100 text-amber-800',
+  High:   'bg-red-100 text-red-800',
+}
+const AI_PRIORITY_BG = ['', 'bg-red-600', 'bg-orange-500', 'bg-amber-500', 'bg-blue-500', 'bg-gray-500']
+
+function AIRecommendationsCard({
+  data, loading, error, companyName,
+}: {
+  data: AIRecommendationsResult | null
+  loading: boolean
+  error: string
+  companyName: string
+}) {
+  if (!loading && !data && !error) return null
+  return (
+    <div className="card p-0 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3" style={{ background: '#1e1b4b' }}>
+        <div className="flex items-center gap-2 text-white">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 6v4m0 4h.01"/>
+          </svg>
+          <span className="text-sm font-bold">AI Security Recommendations</span>
+          {data?.orgContext?.industry && (
+            <span className="text-purple-300 text-xs hidden md:inline">— {data.orgContext.industry}</span>
+          )}
+        </div>
+        <span className="text-purple-300 text-xs hidden sm:inline">Powered by phi3:mini</span>
+      </div>
+
+      {/* Loading */}
+      {loading && (
+        <div className="px-5 py-8 flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin" />
+          <p className="text-xs text-gray-500 text-center">
+            Analysing {companyName}&apos;s online presence and generating tailored recommendations…<br />
+            <span className="text-gray-400">This may take up to 60 seconds</span>
+          </p>
+        </div>
+      )}
+
+      {/* Error */}
+      {!loading && error && (
+        <div className="px-5 py-4 flex items-start gap-2 text-sm text-amber-800 bg-amber-50">
+          <AlertTriangleIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Results */}
+      {!loading && data && (
+        <div className="divide-y divide-gray-100">
+          {data.recommendations.map((rec) => (
+            <div key={rec.priority} className="px-5 py-4">
+              <div className="flex items-start gap-3">
+                <div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center text-white text-sm font-bold rounded-full ${AI_PRIORITY_BG[rec.priority] || 'bg-gray-500'}`}>
+                  {rec.priority}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                    <span className="text-sm font-bold text-gray-900">{rec.title}</span>
+                    <span className={`text-xs px-2 py-0.5 font-medium rounded-full ${AI_CAT_COLORS[rec.category] || 'bg-gray-100 text-gray-700'}`}>{rec.category}</span>
+                    <span className={`text-xs px-2 py-0.5 font-medium rounded-full ${AI_EFFORT_COLORS[rec.effort] || 'bg-gray-100 text-gray-700'}`}>{rec.effort} effort</span>
+                  </div>
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">Finding</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{rec.finding}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">Recommended Action</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{rec.action}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ─── Main Page ──────────────────────────────────────────────────── */
 export default function ResultPage() {
   const { id } = useParams<{ id: string }>()
@@ -311,6 +416,11 @@ export default function ResultPage() {
   // VA scan state
   const [vaResult, setVaResult]   = useState<VAResult | null>(null)
   const [vaScanning, setVaScanning] = useState(false)
+
+  // AI recommendations state
+  const [aiRecs, setAiRecs]       = useState<AIRecommendationsResult | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError]     = useState('')
 
   // Load submission
   useEffect(() => {
@@ -335,6 +445,30 @@ export default function ResultPage() {
       .catch(() => { setVaResult({ reachable: false, error: 'Scan failed — unable to reach the website.' }) })
       .finally(() => setVaScanning(false))
   }, [submission?.website])
+
+  // Auto-run AI recommendations after VA scan returns a reachable result
+  useEffect(() => {
+    if (!vaResult?.reachable || !submission?.website || !submission?.companyName) return
+    setAiLoading(true)
+    setAiError('')
+    setAiRecs(null)
+    fetch('/api/ai-recommendations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: submission.website,
+        companyName: submission.companyName,
+        vaResult,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) setAiError(data.error)
+        else setAiRecs(data as AIRecommendationsResult)
+      })
+      .catch(() => setAiError('Could not connect to AI service. Ensure Ollama is running.'))
+      .finally(() => setAiLoading(false))
+  }, [vaResult, submission?.website, submission?.companyName])
 
   /* ── Loading / error states ──────────────────────────────────── */
   if (loading) {
@@ -502,6 +636,16 @@ export default function ResultPage() {
               <VAResultCard result={vaResult} scanning={vaScanning} />
             </div>
           </div>
+        )}
+
+        {/* AI Recommendations — auto-triggers after VA scan */}
+        {submission.website && (aiLoading || aiRecs || aiError) && (
+          <AIRecommendationsCard
+            data={aiRecs}
+            loading={aiLoading}
+            error={aiError}
+            companyName={submission.companyName}
+          />
         )}
 
         {/* Company details */}
