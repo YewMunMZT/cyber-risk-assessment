@@ -18,6 +18,20 @@ interface VAResult {
   error?: string
 }
 
+/* ── AI Recommendation types ─────────────────────────────────────── */
+interface Recommendation {
+  priority: number
+  title: string
+  category: 'People' | 'Process' | 'Technology' | 'Infrastructure' | 'Compliance'
+  finding: string
+  action: string
+  effort: 'Low' | 'Medium' | 'High'
+}
+interface AIRecommendationsResult {
+  recommendations: Recommendation[]
+  orgContext: { title: string; description: string; industry: string }
+}
+
 interface Choice { text: string; score: number }
 
 interface Question {
@@ -232,6 +246,98 @@ function VAResultCard({ result }: { result: VAResult }) {
   )
 }
 
+/* ── AI Recommendations Card ─────────────────────────────────────── */
+const AI_CAT_COLORS: Record<string, string> = {
+  People:         'bg-purple-100 text-purple-800',
+  Process:        'bg-blue-100 text-blue-800',
+  Technology:     'bg-indigo-100 text-indigo-800',
+  Infrastructure: 'bg-cyan-100 text-cyan-800',
+  Compliance:     'bg-amber-100 text-amber-800',
+}
+const AI_EFFORT_COLORS: Record<string, string> = {
+  Low:    'bg-green-100 text-green-800',
+  Medium: 'bg-amber-100 text-amber-800',
+  High:   'bg-red-100 text-red-800',
+}
+const AI_PRIORITY_BG = ['', 'bg-red-600', 'bg-orange-500', 'bg-amber-500', 'bg-blue-500', 'bg-gray-500']
+
+function AIRecommendationsCard({
+  data, loading, error, companyName,
+}: {
+  data: AIRecommendationsResult | null
+  loading: boolean
+  error: string
+  companyName: string
+}) {
+  if (!loading && !data && !error) return null
+  return (
+    <div className="mt-3 border border-uob-border bg-white overflow-hidden" style={{ borderRadius: 2 }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-2.5" style={{ background: '#1e1b4b' }}>
+        <div className="flex items-center gap-2 text-white">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 6v4m0 4h.01"/>
+          </svg>
+          <span className="text-xs font-semibold tracking-wide">AI Security Recommendations</span>
+          {data?.orgContext?.industry && (
+            <span className="text-purple-300 text-xs hidden sm:inline">— {data.orgContext.industry}</span>
+          )}
+        </div>
+        <span className="text-purple-300 text-xs hidden sm:inline">Powered by phi3:mini</span>
+      </div>
+
+      {/* Loading */}
+      {loading && (
+        <div className="px-4 py-8 flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin" />
+          <p className="text-xs text-gray-500 text-center">
+            Analysing {companyName}&apos;s online presence and security posture…<br />
+            <span className="text-gray-400">This may take up to 60 seconds</span>
+          </p>
+        </div>
+      )}
+
+      {/* Error */}
+      {!loading && error && (
+        <div className="px-4 py-3 flex items-start gap-2 text-xs text-amber-800 bg-amber-50 border-t border-amber-200">
+          <AlertIcon />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Results */}
+      {!loading && data && (
+        <div className="divide-y divide-gray-100">
+          {data.recommendations.map((rec) => (
+            <div key={rec.priority} className="px-4 py-4">
+              <div className="flex items-start gap-3">
+                <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center text-white text-xs font-bold rounded-full ${AI_PRIORITY_BG[rec.priority] || 'bg-gray-500'}`}>
+                  {rec.priority}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                    <span className="text-sm font-bold text-gray-900">{rec.title}</span>
+                    <span className={`text-xs px-2 py-0.5 font-medium rounded-full ${AI_CAT_COLORS[rec.category] || 'bg-gray-100 text-gray-700'}`}>{rec.category}</span>
+                    <span className={`text-xs px-2 py-0.5 font-medium rounded-full ${AI_EFFORT_COLORS[rec.effort] || 'bg-gray-100 text-gray-700'}`}>{rec.effort} effort</span>
+                  </div>
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Finding</p>
+                    <p className="text-xs text-gray-700 leading-relaxed">{rec.finding}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Recommended Action</p>
+                    <p className="text-xs text-gray-700 leading-relaxed">{rec.action}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AssessmentPage() {
   const router = useRouter()
   const [questions, setQuestions] = useState<Question[]>([])
@@ -253,6 +359,44 @@ export default function AssessmentPage() {
   const [vaResult, setVaResult]   = useState<VAResult | null>(null)
   const [vaLoading, setVaLoading] = useState(false)
   const vaAbort = useRef<AbortController | null>(null)
+
+  // ── AI recommendations ────────────────────────────────────────────
+  const [aiRecs, setAiRecs]     = useState<AIRecommendationsResult | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError]   = useState('')
+  const aiAbort = useRef<AbortController | null>(null)
+
+  const runAIScan = useCallback(async (url: string, company: string, va: VAResult) => {
+    if (!va.reachable || !url || !company) return
+    aiAbort.current?.abort()
+    aiAbort.current = new AbortController()
+    setAiLoading(true)
+    setAiError('')
+    setAiRecs(null)
+    try {
+      const res = await fetch('/api/ai-recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, companyName: company, vaResult: va }),
+        signal: aiAbort.current.signal,
+      })
+      const data = await res.json()
+      if (!res.ok) setAiError(data.error || 'AI recommendations unavailable.')
+      else setAiRecs(data as AIRecommendationsResult)
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') setAiError('Could not connect to AI service. Ensure Ollama is running.')
+    } finally {
+      setAiLoading(false)
+    }
+  }, [])
+
+  // Auto-trigger AI scan once VA scan returns a reachable result
+  useEffect(() => {
+    if (vaResult?.reachable && form.website && form.companyName) {
+      runAIScan(form.website, form.companyName, vaResult)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vaResult])
 
   const runVAScan = useCallback(async (url: string) => {
     const trimmed = url.trim()
@@ -516,7 +660,7 @@ export default function AssessmentPage() {
                       className={`input-field pr-10 ${vaLoading ? 'border-uob-navy' : ''}`}
                       placeholder="https://www.company.com"
                       value={form.website}
-                      onChange={(e) => { updateForm('website', e.target.value); setVaResult(null) }}
+                      onChange={(e) => { updateForm('website', e.target.value); setVaResult(null); setAiRecs(null); setAiError('') }}
                       onBlur={(e) => runVAScan(e.target.value)}
                     />
                     {vaLoading && (
@@ -545,6 +689,16 @@ export default function AssessmentPage() {
                   {/* Success result card */}
                   {!vaLoading && vaResult?.reachable && vaResult.checks && (
                     <VAResultCard result={vaResult} />
+                  )}
+
+                  {/* AI Recommendations — auto-triggers after VA scan succeeds */}
+                  {!vaLoading && vaResult?.reachable && (
+                    <AIRecommendationsCard
+                      data={aiRecs}
+                      loading={aiLoading}
+                      error={aiError}
+                      companyName={form.companyName || 'your organisation'}
+                    />
                   )}
                 </div>
 
