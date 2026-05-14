@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 
@@ -49,6 +49,8 @@ interface VAResult {
   grade?: string
   error?: string
 }
+
+interface ChatMessage { role: 'user' | 'assistant'; content: string }
 
 interface Recommendation {
   priority: number
@@ -405,6 +407,226 @@ function AIRecommendationsCard({
   )
 }
 
+/* ─── Chat icons ─────────────────────────────────────────────────── */
+const ChatBubbleIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+)
+const SendIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <line x1="22" y1="2" x2="11" y2="13" />
+    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+  </svg>
+)
+
+/* ─── AI Chat Box ────────────────────────────────────────────────── */
+const SUGGESTED_QUESTIONS = [
+  'What does my risk score mean?',
+  'What should I fix first?',
+  'How do I improve my security headers?',
+  'What is the biggest risk for my industry?',
+]
+
+function AssessmentChatBox({
+  submission,
+  aiRecs,
+}: {
+  submission: Submission
+  aiRecs: AIRecommendationsResult | null
+}) {
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [input, setInput]       = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef  = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, loading])
+
+  async function send(text?: string) {
+    const content = (text ?? input).trim()
+    if (!content || loading) return
+
+    const newHistory: ChatMessage[] = [...messages, { role: 'user', content }]
+    setMessages(newHistory)
+    setInput('')
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: newHistory,
+          context: {
+            companyName:     submission.companyName,
+            riskScore:       submission.overallRiskScore,
+            riskLevel:       submission.overallRiskLevel,
+            industry:        aiRecs?.orgContext?.industry ?? null,
+            recommendations: aiRecs?.recommendations ?? [],
+          },
+        }),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setError(data.error)
+      } else {
+        setMessages(h => [...h, { role: 'assistant', content: data.reply }])
+      }
+    } catch {
+      setError('Connection failed. Please retry.')
+    } finally {
+      setLoading(false)
+      setTimeout(() => inputRef.current?.focus(), 50)
+    }
+  }
+
+  return (
+    <div className="card p-0 overflow-hidden print:hidden">
+
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 py-3.5 bg-uob-navy">
+        <div className="w-8 h-8 bg-white/15 flex items-center justify-center flex-shrink-0 rounded-full">
+          <ChatBubbleIcon className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <h2 className="text-sm font-bold text-white">AI Security Advisor</h2>
+          <p className="text-blue-200 text-xs">Ask anything about your assessment results</p>
+        </div>
+        <span className="ml-auto text-blue-300 text-xs hidden sm:block">phi3:mini</span>
+      </div>
+
+      {/* Message area */}
+      <div
+        className="overflow-y-auto px-4 py-4 space-y-3 bg-gray-50"
+        style={{ minHeight: 200, maxHeight: 380 }}
+      >
+        {/* Welcome bubble */}
+        <div className="flex items-start gap-2.5">
+          <div className="w-7 h-7 bg-uob-navy flex items-center justify-center flex-shrink-0 mt-0.5 rounded-full">
+            <ChatBubbleIcon className="w-3.5 h-3.5 text-white" />
+          </div>
+          <div
+            className="bg-white border border-gray-200 px-4 py-3 text-sm text-gray-700 leading-relaxed max-w-sm"
+            style={{ borderRadius: '0 10px 10px 10px' }}
+          >
+            Hi! I have access to {submission.companyName}&apos;s results —{' '}
+            <span className="font-semibold">risk score {submission.overallRiskScore}/10 ({submission.overallRiskLevel})</span>.
+            Ask me anything about your cybersecurity posture.
+          </div>
+        </div>
+
+        {/* Suggested questions — shown only before first message */}
+        {messages.length === 0 && (
+          <div className="pl-9 flex flex-wrap gap-2">
+            {SUGGESTED_QUESTIONS.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => send(q)}
+                disabled={loading}
+                className="text-xs px-3 py-1.5 bg-white border border-uob-navy/30 text-uob-navy hover:bg-blue-50 hover:border-uob-navy transition-colors disabled:opacity-50"
+                style={{ borderRadius: 20 }}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Conversation */}
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={`flex items-start gap-2.5 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+          >
+            {/* Avatar */}
+            <div
+              className={`w-7 h-7 flex items-center justify-center flex-shrink-0 mt-0.5 text-white text-xs font-bold rounded-full ${
+                msg.role === 'user' ? 'bg-gray-400' : 'bg-uob-navy'
+              }`}
+            >
+              {msg.role === 'user' ? 'You' : <ChatBubbleIcon className="w-3.5 h-3.5 text-white" />}
+            </div>
+            {/* Bubble */}
+            <div
+              className={`px-4 py-3 text-sm leading-relaxed max-w-sm ${
+                msg.role === 'user'
+                  ? 'bg-uob-navy text-white'
+                  : 'bg-white border border-gray-200 text-gray-700'
+              }`}
+              style={{
+                borderRadius: msg.role === 'user' ? '10px 0 10px 10px' : '0 10px 10px 10px',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {msg.content}
+            </div>
+          </div>
+        ))}
+
+        {/* Typing indicator */}
+        {loading && (
+          <div className="flex items-start gap-2.5">
+            <div className="w-7 h-7 bg-uob-navy flex items-center justify-center flex-shrink-0 mt-0.5 rounded-full">
+              <ChatBubbleIcon className="w-3.5 h-3.5 text-white" />
+            </div>
+            <div
+              className="bg-white border border-gray-200 px-4 py-3.5 flex items-center gap-1.5"
+              style={{ borderRadius: '0 10px 10px 10px' }}
+            >
+              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '160ms' }} />
+              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '320ms' }} />
+            </div>
+          </div>
+        )}
+
+        {/* Error notice */}
+        {error && (
+          <div className="ml-9 flex items-center gap-1.5 text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2" style={{ borderRadius: 2 }}>
+            <AlertTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />
+            {error}
+            <button type="button" className="ml-auto underline" onClick={() => setError('')}>Dismiss</button>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input bar */}
+      <div className="border-t border-gray-200 p-3 bg-white flex gap-2">
+        <input
+          ref={inputRef}
+          type="text"
+          className="flex-1 px-3 py-2.5 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-uob-navy"
+          style={{ borderRadius: 2 }}
+          placeholder="Ask about your security results..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
+          }}
+          disabled={loading}
+        />
+        <button
+          type="button"
+          onClick={() => send()}
+          disabled={loading || !input.trim()}
+          className="btn-primary px-4 py-2.5 text-sm flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <SendIcon className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Send</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Main Page ──────────────────────────────────────────────────── */
 export default function ResultPage() {
   const { id } = useParams<{ id: string }>()
@@ -647,6 +869,9 @@ export default function ResultPage() {
             companyName={submission.companyName}
           />
         )}
+
+        {/* AI Chat */}
+        <AssessmentChatBox submission={submission} aiRecs={aiRecs} />
 
         {/* Company details */}
         <div className="card">
